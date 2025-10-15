@@ -95,4 +95,53 @@ class ApiService
             return ['success' => false, 'error' => 'Error de conexión: ' . $e->getMessage()];
         }
     }
+    // En App/Services/ApiService.php, agrega este método:
+public function delete($endpoint)
+{
+    $token = session('token');
+    
+    if (!$token) {
+        Log::warning('No token found for API DELETE request', ['endpoint' => $endpoint]);
+        return ['success' => false, 'error' => 'No hay token de autenticación'];
+    }
+
+    $url = $this->baseUrl . $endpoint;
+    
+    try {
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+            'Accept' => 'application/json',
+        ])
+        ->timeout(10)
+        ->delete($url);
+
+        Log::info('API DELETE Response', [
+            'status' => $response->status(),
+            'success' => $response->successful(),
+            'endpoint' => $endpoint
+        ]);
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        if ($response->status() === 401) {
+            session()->forget(['token', 'user']);
+            return ['success' => false, 'error' => 'Sesión expirada'];
+        }
+
+        return [
+            'success' => false, 
+            'error' => 'Error en la API: ' . $response->status(),
+            'status' => $response->status()
+        ];
+
+    } catch (\Exception $e) {
+        Log::error('API DELETE Exception', [
+            'endpoint' => $endpoint,
+            'error' => $e->getMessage()
+        ]);
+        return ['success' => false, 'error' => 'Error de conexión: ' . $e->getMessage()];
+    }
+}
 }

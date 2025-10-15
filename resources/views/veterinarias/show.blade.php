@@ -41,10 +41,9 @@
 
                     <!-- Contenido -->
                     <div class="p-6">
-                        <!-- Imagen - Misma lógica que el index -->
+                        <!-- Imagen -->
                         <div class="text-center mb-6">
                             @php
-                                // MISMA LÓGICA QUE EN EL INDEX - Imágenes locales cíclicas
                                 $localImages = [
                                     'veterinaria1.jpg',
                                     'veterinaria2.jpg', 
@@ -54,7 +53,6 @@
                                     'veterinaria6.jpg'
                                 ];
                                 
-                                // Usar el ID de la veterinaria para seleccionar imagen cíclica
                                 $imageIndex = ($veterinaria['id'] ?? 0) % count($localImages);
                                 $localImage = $localImages[$imageIndex];
                             @endphp
@@ -198,145 +196,90 @@
                             </p>
                         </div>
                         @endif
-
-                        <!-- Servicios Adicionales -->
-                        <div class="mt-6">
-                            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                <i class="fas fa-concierge-bell text-purple-500 mr-2"></i>
-                                Servicios Ofrecidos
-                            </h2>
-                            <div class="flex flex-wrap gap-2">
-                                @php
-                                    // Servicios basados en la especialización
-                                    $servicios = [
-                                        'Medicina General' => ['Consulta general', 'Vacunación', 'Desparasitación'],
-                                        'Cirugía' => ['Cirugía general', 'Esterilización', 'Cirugía reconstructiva'],
-                                        'Dermatología' => ['Tratamiento de piel', 'Alergias', 'Dermatitis'],
-                                        'Cardiología' => ['Ecocardiograma', 'Electrocardiograma', 'Consulta cardíaca'],
-                                        'Oftalmología' => ['Consulta ocular', 'Cirugía ocular', 'Tratamiento de cataratas'],
-                                        'default' => ['Consulta veterinaria', 'Atención de urgencias', 'Asesoramiento']
-                                    ];
-                                    
-                                    $especialidad = $veterinaria['specialization'] ?? 'default';
-                                    $serviciosMostrar = $servicios[$especialidad] ?? $servicios['default'];
-                                @endphp
-                                
-                                @foreach($serviciosMostrar as $servicio)
-                                <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">
-                                    {{ $servicio }}
-                                </span>
-                                @endforeach
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Sidebar -->
             <div class="space-y-6">
-                <!-- Acciones Rápidas -->
+                <!-- Formulario de Solicitud de Cita -->
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="bg-green-600 text-white px-4 py-3">
+                    <div class="bg-indigo-600 text-white px-4 py-3">
                         <h3 class="font-semibold flex items-center">
-                            <i class="fas fa-bolt mr-2"></i>
-                            Acciones Rápidas
-                        </h3>
-                    </div>
-                    <div class="p-4 space-y-3">
-                        @if(isset($veterinaria['user']['profile']['phone']))
-                        <a href="tel:{{ $veterinaria['user']['profile']['phone'] }}" 
-                           class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200 font-semibold flex items-center justify-center">
-                            <i class="fas fa-phone mr-2"></i>
-                            Llamar Ahora
-                        </a>
-                        @else
-                        <button disabled class="w-full bg-gray-400 text-white py-3 px-4 rounded-lg font-semibold flex items-center justify-center cursor-not-allowed">
-                            <i class="fas fa-phone mr-2"></i>
-                            Teléfono no disponible
-                        </button>
-                        @endif
-                        
-                        @if(isset($veterinaria['user']['email']))
-                        <a href="mailto:{{ $veterinaria['user']['email'] }}" 
-                           class="w-full border border-indigo-600 text-indigo-600 py-3 px-4 rounded-lg hover:bg-indigo-50 transition duration-200 font-semibold flex items-center justify-center">
-                            <i class="fas fa-envelope mr-2"></i>
-                            Enviar Email
-                        </a>
-                        @else
-                        <button disabled class="w-full border border-gray-400 text-gray-400 py-3 px-4 rounded-lg font-semibold flex items-center justify-center cursor-not-allowed">
-                            <i class="fas fa-envelope mr-2"></i>
-                            Email no disponible
-                        </button>
-                        @endif
-                        
-                        <button onclick="shareVeterinary()" 
-                                class="w-full border border-yellow-600 text-yellow-600 py-3 px-4 rounded-lg hover:bg-yellow-50 transition duration-200 font-semibold flex items-center justify-center">
-                            <i class="fas fa-share-alt mr-2"></i>
-                            Compartir
-                        </button>
-                        
-                        <button onclick="toggleFavorite({{ $veterinaria['id'] ?? 0 }})" 
-                                class="w-full border border-red-600 text-red-600 py-3 px-4 rounded-lg hover:bg-red-50 transition duration-200 font-semibold flex items-center justify-center" 
-                                id="favoriteBtn">
-                            <i class="far fa-heart mr-2" id="favoriteIcon"></i>
-                            <span id="favoriteText">Agregar a Favoritos</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Información de Contacto -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="bg-blue-600 text-white px-4 py-3">
-                        <h3 class="font-semibold flex items-center">
-                            <i class="fas fa-address-card mr-2"></i>
-                            Contacto
+                            <i class="fas fa-calendar-plus mr-2"></i>
+                            Solicitar Cita
                         </h3>
                     </div>
                     <div class="p-4">
-                        @if(isset($veterinaria['user']['profile']))
-                        <div class="space-y-3">
-                            @if(isset($veterinaria['user']['profile']['phone']))
-                            <div class="flex items-start">
-                                <i class="fas fa-phone text-green-500 mt-1 mr-3 w-4"></i>
-                                <div>
-                                    <p class="font-medium text-gray-900">Teléfono</p>
-                                    <p class="text-gray-600">{{ $veterinaria['user']['profile']['phone'] }}</p>
-                                </div>
-                            </div>
-                            @endif
+                        <form action="{{ route('citas.store') }}" method="POST" class="space-y-4">
+                            @csrf
+                            <input type="hidden" name="veterinary_id" value="{{ $veterinaria['id'] ?? '' }}">
                             
-                            @if(isset($veterinaria['user']['profile']['address']))
-                            <div class="flex items-start">
-                                <i class="fas fa-map-marker-alt text-red-500 mt-1 mr-3 w-4"></i>
-                                <div>
-                                    <p class="font-medium text-gray-900">Dirección</p>
-                                    <p class="text-gray-600">{{ $veterinaria['user']['profile']['address'] }}</p>
-                                </div>
+                            <!-- Fecha -->
+                            <div>
+                                <label for="date" class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-calendar-day mr-1"></i>
+                                    Fecha de la cita
+                                </label>
+                                <input 
+                                    type="date" 
+                                    id="date" 
+                                    name="date"
+                                    min="{{ date('Y-m-d') }}"
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-200"
+                                    required
+                                >
                             </div>
-                            @endif
-                            
-                            @if(isset($veterinaria['user']['email']))
-                            <div class="flex items-start">
-                                <i class="fas fa-envelope text-blue-500 mt-1 mr-3 w-4"></i>
-                                <div>
-                                    <p class="font-medium text-gray-900">Email</p>
-                                    <p class="text-gray-600">{{ $veterinaria['user']['email'] }}</p>
-                                </div>
+
+                            <!-- Descripción -->
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-file-alt mr-1"></i>
+                                    Descripción / Motivo
+                                </label>
+                                <textarea 
+                                    id="description" 
+                                    name="description"
+                                    rows="4"
+                                    placeholder="Describe el motivo de tu cita, síntomas de tu mascota, etc."
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-200 resize-none"
+                                    required
+                                ></textarea>
+                                <p class="text-xs text-gray-500 mt-1">Proporciona detalles sobre la consulta</p>
                             </div>
-                            @endif
-                        </div>
-                        @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-info-circle text-gray-400 text-2xl mb-2"></i>
-                            <p class="text-gray-500 italic">Información de contacto no disponible</p>
-                        </div>
+
+                            <!-- Botón de envío -->
+                            <button 
+                                type="submit"
+                                class="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 font-semibold flex items-center justify-center"
+                            >
+                                <i class="fas fa-paper-plane mr-2"></i>
+                                Solicitar Cita
+                            </button>
+                        </form>
+
+                        @if($errors->any())
+                            <div class="mt-4 p-3 bg-red-100 text-red-800 rounded-lg">
+                                <ul class="list-disc list-inside">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        @if(session('success'))
+                            <div class="mt-4 p-3 bg-green-100 text-green-800 rounded-lg">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                {{ session('success') }}
+                            </div>
                         @endif
                     </div>
                 </div>
 
                 <!-- Volver a la lista -->
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="bg-indigo-600 text-white px-4 py-3">
+                    <div class="bg-gray-600 text-white px-4 py-3">
                         <h3 class="font-semibold flex items-center">
                             <i class="fas fa-arrow-left mr-2"></i>
                             Navegación
@@ -344,7 +287,7 @@
                     </div>
                     <div class="p-4">
                         <a href="{{ route('veterinarias.index') }}" 
-                           class="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 font-semibold flex items-center justify-center">
+                           class="w-full bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition duration-200 font-semibold flex items-center justify-center">
                             <i class="fas fa-list mr-2"></i>
                             Volver a Veterinarias
                         </a>
@@ -354,56 +297,4 @@
         </div>
     </div>
 </div>
-
-@push('scripts')
-<script>
-function shareVeterinary() {
-    if (navigator.share) {
-        navigator.share({
-            title: '{{ $veterinaria["clinic_name"] ?? "Veterinaria" }} - PetPedia',
-            text: 'Mira esta veterinaria en PetPedia: {{ $veterinaria["clinic_name"] ?? "Veterinaria profesional" }}',
-            url: window.location.href
-        })
-        .then(() => console.log('Compartido exitosamente'))
-        .catch((error) => console.log('Error al compartir', error));
-    } else {
-        navigator.clipboard.writeText(window.location.href).then(function() {
-            alert('Enlace copiado al portapapeles');
-        });
-    }
-}
-
-function toggleFavorite(veterinaryId) {
-    const btn = document.getElementById('favoriteBtn');
-    const icon = document.getElementById('favoriteIcon');
-    const text = document.getElementById('favoriteText');
-    
-    if (icon.classList.contains('far')) {
-        icon.classList.remove('far');
-        icon.classList.add('fas');
-        btn.classList.remove('border-red-600', 'text-red-600', 'hover:bg-red-50');
-        btn.classList.add('border-red-500', 'bg-red-500', 'text-white', 'hover:bg-red-600');
-        text.textContent = 'En Favoritos';
-        
-        // Aquí podrías hacer una petición a tu API para guardar en favoritos
-        console.log('Agregando veterinaria', veterinaryId, 'a favoritos');
-    } else {
-        icon.classList.remove('fas');
-        icon.classList.add('far');
-        btn.classList.remove('border-red-500', 'bg-red-500', 'text-white', 'hover:bg-red-600');
-        btn.classList.add('border-red-600', 'text-red-600', 'hover:bg-red-50');
-        text.textContent = 'Agregar a Favoritos';
-        
-        // Aquí podrías hacer una petición a tu API para quitar de favoritos
-        console.log('Quitando veterinaria', veterinaryId, 'de favoritos');
-    }
-}
-
-// Cargar estado de favoritos al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    // Aquí podrías verificar si esta veterinaria está en favoritos
-    // y actualizar el botón en consecuencia
-});
-</script>
-@endpush
 @endsection
