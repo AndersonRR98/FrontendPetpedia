@@ -1,15 +1,14 @@
 <?php
-use App\Http\Controllers\FrontAuthController;
+namespace App\Http\Controllers;
+
 
 
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('home'); // aquí irá tu página inicial con servicios
 });
 
-
-Route::get('/', fn() => redirect('/login'));
 
 Route::get('/login', [FrontAuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [FrontAuthController::class, 'login']);
@@ -24,3 +23,34 @@ Route::view('/cliente/dashboard', 'roles.cliente');
 Route::view('/veterinario/dashboard', 'roles.veterinario');
 Route::view('/entrenador/dashboard', 'roles.entrenador');
 Route::view('/refugio/dashboard', 'roles.refugio');
+//Autenticación (usando layout guest)
+Route::middleware(['guest'])->group(function () {
+    Route::get('/login', [FrontAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [FrontAuthController::class, 'login']);
+    Route::get('/register', [FrontAuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [FrontAuthController::class, 'register']);
+});
+
+// Rutas Protegidas (usando layout app)
+Route::middleware(['web'])->group(function () {
+    
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
+    
+    // Servicios
+    Route::prefix('veterinarias')->group(function () {
+        Route::get('/', [VeterinaryController::class, 'index'])->name('veterinarias.index');
+        Route::get('/{id}', [VeterinaryController::class, 'show'])->name('veterinarias.show');
+    });
+    
+    Route::prefix('entrenadores')->group(function () {
+        Route::get('/', [TrainerController::class, 'index'])->name('entrenadores.index');
+        Route::get('/{id}', [TrainerController::class, 'show'])->name('entrenadores.show');
+    });
+    
+    Route::prefix('refugios')->group(function () {
+        Route::get('/', [ShelterController::class, 'index'])->name('refugios.index');
+        Route::get('/{id}', [ShelterController::class, 'show'])->name('refugios.show');
+    });
+});

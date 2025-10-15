@@ -37,13 +37,8 @@ class FrontAuthController extends Controller
                 'user' => $data['user'],
             ]);
 
-            // Redirigir según el rol
-            switch ($data['user']['role']['id']) {
-                case 1: return redirect('/cliente/dashboard');
-                case 2: return redirect('/veterinario/dashboard');
-                case 3: return redirect('/entrenador/dashboard');
-                case 4: return redirect('/refugio/dashboard');
-            }
+            // Redirigir al dashboard principal que mostrará los servicios
+            return redirect()->route('dashboard');
         }
 
         // Si llega aquí, las credenciales no fueron válidas
@@ -72,10 +67,11 @@ class FrontAuthController extends Controller
             return redirect('/login')->with('success', 'Registro exitoso, inicia sesión');
         }
 
-return back()->withErrors([
-    'register' => $response->json()['message'] ?? 'Error en el registro.',
-    'errors' => $response->json()['errors'] ?? []
-])->withInput();    }
+        return back()->withErrors([
+            'register' => $response->json()['message'] ?? 'Error en el registro.',
+            'errors' => $response->json()['errors'] ?? []
+        ])->withInput();
+    }
 
     // -------------------- LOGOUT --------------------
     public function logout()

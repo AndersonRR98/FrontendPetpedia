@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.tailwind')
 
 @section('content')
 <div class="text-center">
