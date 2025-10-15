@@ -10,11 +10,9 @@
     @stack('styles')
 </head>
 <body class="bg-gray-50">
-    <!-- Navbar del Dashboard -->
     <nav class="bg-white shadow-lg sticky top-0 z-50" x-data="{ open: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
-                <!-- Logo -->
                 <div class="flex items-center">
                     <a href="{{ route('dashboard') }}" class="flex items-center">
                         <img src="{{ asset('images/logo petpedia.png') }}" alt="PetPedia Logo" class="h-8 w-auto">
@@ -22,7 +20,6 @@
                     </a>
                 </div>
 
-                <!-- Navigation Links - Desktop -->
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="{{ route('dashboard') }}" 
                        class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200 {{ request()->routeIs('dashboard') ? 'text-indigo-600 border-b-2 border-indigo-600' : '' }}">
@@ -30,14 +27,12 @@
                         Dashboard
                     </a>
 
-                    <!-- Enlace directo a Mis Citas -->
                     <a href="{{ route('citas.index') }}" 
                        class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200 {{ request()->routeIs('citas.*') ? 'text-indigo-600 border-b-2 border-indigo-600' : '' }}">
                         <i class="fas fa-calendar-alt mr-1"></i>
                         Mis Citas
                     </a>
 
-                    <!-- Servicios Dropdown -->
                     <div class="relative group" x-data="{ open: false }">
                         <button @click="open = !open" 
                                 class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200 flex items-center">
@@ -46,7 +41,6 @@
                             <i class="fas fa-chevron-down ml-1 text-xs" :class="{ 'rotate-180': open }"></i>
                         </button>
                         
-                        <!-- Dropdown Menu -->
                         <div x-show="open" 
                              @click.away="open = false"
                              class="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
@@ -77,180 +71,95 @@
                                     <p class="text-xs text-gray-500">Adopta una mascota</p>
                                 </div>
                             </a>
+
+                            <a href="{{ route('adopciones') }}" 
+                               class="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 transition duration-200">
+                                <i class="fas fa-heart text-pink-600 mr-3"></i>
+                                <div>
+                                    <p class="font-medium">Adopciones</p>
+                                    <p class="text-xs text-gray-500">Dale un hogar a una mascota</p>
+                                </div>
+                            </a>
                         </div>
                     </div>
 
-                    <!-- Enlace a Perfil (puedes implementarlo después) -->
-                    <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200">
+                    <a href="{{ route('profile.show') }}" 
+                       class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200 {{ request()->routeIs('profile.show') ? 'text-indigo-600 border-b-2 border-indigo-600' : '' }}">
                         <i class="fas fa-user mr-1"></i>
                         Mi Perfil
                     </a>
                 </div>
 
-                <!-- User Menu - Desktop -->
                 <div class="hidden md:flex items-center space-x-4">
-                    <div class="flex items-center space-x-3 bg-gray-100 rounded-full px-4 py-2">
-                        <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
-                            <span class="text-white text-sm font-semibold">
-                                {{ substr(session('user')['name'] ?? 'U', 0, 1) }}
-                            </span>
+                    <div class="flex items-center space-x-2">
+                        <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-sm">
+                            {{ strtoupper(substr(session('user.name', 'D'), 0, 1)) }}
                         </div>
-                        <span class="text-gray-700 text-sm font-medium">{{ session('user')['name'] ?? 'Usuario' }}</span>
+                        <span class="text-gray-800 font-medium">
+                            {{ session('user.name') ?? 'Usuario' }}
+                        </span>
                     </div>
-                    
-                    <form method="POST" action="{{ route('logout') }}">
+
+                    <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="text-gray-500 hover:text-red-600 transition duration-200 flex items-center space-x-2 bg-gray-100 hover:bg-red-50 px-3 py-2 rounded-lg">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Salir</span>
+                        <button type="submit" 
+                                class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded text-sm transition duration-200">
+                            Salir
                         </button>
                     </form>
                 </div>
-
-                <!-- Mobile menu button -->
-                <div class="md:hidden">
-                    <button @click="open = !open" class="text-gray-700 hover:text-indigo-600 p-2 rounded-lg bg-gray-100">
-                        <i class="fas fa-bars text-lg"></i>
+                
+                <div class="flex md:hidden">
+                    <button @click="open = true" type="button" class="text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700">
+                        <i class="fas fa-bars h-6 w-6"></i>
                     </button>
                 </div>
             </div>
-
-            <!-- Mobile Menu -->
-            <div x-show="open" class="md:hidden border-t border-gray-200 pt-4 pb-6">
-                <div class="space-y-4">
-                    <!-- Dashboard -->
-                    <a href="{{ route('dashboard') }}" 
-                       class="flex items-center text-gray-700 hover:text-indigo-600 font-medium p-3 rounded-lg hover:bg-indigo-50 transition duration-200">
-                        <i class="fas fa-home text-indigo-500 mr-3 w-5"></i>
-                        Dashboard
-                    </a>
-                    
-                    <!-- Mis Citas -->
-                    <a href="{{ route('citas.index') }}" 
-                       class="flex items-center text-gray-700 hover:text-indigo-600 font-medium p-3 rounded-lg hover:bg-indigo-50 transition duration-200">
-                        <i class="fas fa-calendar-alt text-indigo-500 mr-3 w-5"></i>
-                        Mis Citas
-                    </a>
-                    
-                    <!-- Servicios -->
-                    <div class="space-y-2">
-                        <p class="font-medium text-gray-900 px-3 py-2">Servicios</p>
-                        
-                        <a href="{{ route('veterinarias.index') }}" 
-                           class="flex items-center text-gray-600 hover:text-indigo-600 ml-4 p-3 rounded-lg hover:bg-indigo-50 transition duration-200">
-                            <i class="fas fa-clinic-medical text-indigo-500 mr-3 w-5"></i>
-                            Veterinarias
-                        </a>
-                        
-                        <a href="{{ route('entrenadores.index') }}" 
-                           class="flex items-center text-gray-600 hover:text-green-600 ml-4 p-3 rounded-lg hover:bg-green-50 transition duration-200">
-                            <i class="fas fa-dumbbell text-green-500 mr-3 w-5"></i>
-                            Entrenadores
-                        </a>
-                        
-                        <a href="{{ route('refugios.index') }}" 
-                           class="flex items-center text-gray-600 hover:text-orange-600 ml-4 p-3 rounded-lg hover:bg-orange-50 transition duration-200">
-                            <i class="fas fa-home text-orange-500 mr-3 w-5"></i>
-                            Refugios
-                        </a>
+        </div>
+        
+        <div x-show="open" 
+             x-transition:enter="duration-200 ease-out" 
+             x-transition:enter-start="opacity-0 scale-95" 
+             x-transition:enter-end="opacity-100 scale-100" 
+             x-transition:leave="duration-100 ease-in" 
+             x-transition:leave-start="opacity-100 scale-100" 
+             x-transition:leave-end="opacity-0 scale-95" 
+             class="md:hidden absolute w-full bg-white shadow-lg pb-3">
+             
+            <div class="px-2 pt-2 space-y-1 sm:px-3">
+                <a href="{{ route('dashboard') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Dashboard</a>
+                <a href="{{ route('citas.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Mis Citas</a>
+                <a href="{{ route('veterinarias.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Veterinarias</a>
+                <a href="{{ route('entrenadores.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Entrenadores</a>
+                <a href="{{ route('refugios.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Refugios</a>
+                <a href="{{ route('adopciones') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Adopciones</a>
+                <a href="{{ route('profile.show') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Mi Perfil</a>
+            </div>
+            <div class="pt-4 pb-3 border-t border-gray-200">
+                <div class="flex items-center px-5">
+                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-lg">
+                        {{ strtoupper(substr(session('user.name', 'D'), 0, 1)) }}
                     </div>
-
-                    <!-- Mi Perfil -->
-                    <a href="#" 
-                       class="flex items-center text-gray-700 hover:text-indigo-600 font-medium p-3 rounded-lg hover:bg-indigo-50 transition duration-200">
-                        <i class="fas fa-user text-indigo-500 mr-3 w-5"></i>
-                        Mi Perfil
-                    </a>
-                    
-                    <!-- Información del usuario y logout -->
-                    <div class="pt-4 border-t border-gray-200">
-                        <div class="flex items-center space-x-3 px-3 py-2 mb-3">
-                            <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
-                                <span class="text-white font-semibold">
-                                    {{ substr(session('user')['name'] ?? 'U', 0, 1) }}
-                                </span>
-                            </div>
-                            <div>
-                                <p class="text-gray-900 font-medium">{{ session('user')['name'] ?? 'Usuario' }}</p>
-                                <p class="text-gray-500 text-sm">{{ session('user')['email'] ?? '' }}</p>
-                            </div>
-                        </div>
-                        
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" 
-                                    class="w-full flex items-center text-red-600 hover:text-red-700 p-3 rounded-lg hover:bg-red-50 transition duration-200">
-                                <i class="fas fa-sign-out-alt mr-3"></i>
-                                Cerrar Sesión
-                            </button>
-                        </form>
+                    <div class="ml-3">
+                        <div class="text-base font-medium text-gray-800">{{ session('user.name') ?? 'Usuario' }}</div>
+                        <div class="text-sm font-medium text-gray-500">{{ session('user.email') ?? 'email@ejemplo.com' }}</div>
                     </div>
+                </div>
+                <div class="mt-3 px-2 space-y-1">
+                    <form action="{{ route('logout') }}" method="POST" class="w-full">
+                        @csrf
+                        <button type="submit" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-red-600 hover:bg-red-50">
+                            Cerrar Sesión
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main>
         @yield('content')
     </main>
-
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white mt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <!-- Logo y descripción -->
-                <div class="col-span-1 md:col-span-2">
-                    <div class="flex items-center mb-4">
-                        <img src="{{ asset('images/logo petpedia.png') }}" alt="PetPedia Logo" class="h-8 w-auto">
-                        <span class="text-white text-xl font-bold ml-3">PetPedia</span>
-                    </div>
-                    <p class="text-gray-300 text-sm">
-                        La plataforma líder para el cuidado y bienestar de tus mascotas. 
-                        Conectamos dueños con los mejores profesionales veterinarios, 
-                        entrenadores y refugios.
-                    </p>
-                </div>
-
-                <!-- Enlaces rápidos -->
-                <div>
-                    <h3 class="font-semibold mb-4">Enlaces Rápidos</h3>
-                    <ul class="space-y-2 text-sm text-gray-300">
-                        <li><a href="{{ route('dashboard') }}" class="hover:text-white transition duration-200">Dashboard</a></li>
-                        <li><a href="{{ route('veterinarias.index') }}" class="hover:text-white transition duration-200">Veterinarias</a></li>
-                        <li><a href="{{ route('entrenadores.index') }}" class="hover:text-white transition duration-200">Entrenadores</a></li>
-                        <li><a href="{{ route('refugios.index') }}" class="hover:text-white transition duration-200">Refugios</a></li>
-                    </ul>
-                </div>
-
-                <!-- Contacto -->
-                <div>
-                    <h3 class="font-semibold mb-4">Contacto</h3>
-                    <ul class="space-y-2 text-sm text-gray-300">
-                        <li class="flex items-center">
-                            <i class="fas fa-envelope mr-2 text-indigo-400"></i>
-                            info@petpedia.com
-                        </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-phone mr-2 text-indigo-400"></i>
-                            +1 (555) 123-4567
-                        </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-map-marker-alt mr-2 text-indigo-400"></i>
-                            Ciudad, País
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Copyright -->
-            <div class="border-t border-gray-700 mt-8 pt-6 text-center">
-                <p class="text-gray-400 text-sm">
-                    &copy; 2024 PetPedia. Todos los derechos reservados.
-                </p>
-            </div>
-        </div>
-    </footer>
 
     @stack('scripts')
 </body>
