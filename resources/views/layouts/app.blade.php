@@ -20,6 +20,7 @@
                     </a>
                 </div>
 
+                <!-- Navegación de Escritorio -->
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="{{ route('dashboard') }}" 
                        class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200 {{ request()->routeIs('dashboard') ? 'text-indigo-600 border-b-2 border-indigo-600' : '' }}">
@@ -32,6 +33,14 @@
                         <i class="fas fa-calendar-alt mr-1"></i>
                         Mis Citas
                     </a>
+                    
+                    <!-- 📦 NUEVO: Enlace a la Tienda de Productos -->
+                    <a href="{{ route('products.index') }}" 
+                       class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200 {{ request()->routeIs('products.*') || request()->routeIs('cart.*') || request()->routeIs('checkout.*') ? 'text-indigo-600 border-b-2 border-indigo-600' : '' }}">
+                        <i class="fas fa-store mr-1"></i>
+                        Tienda
+                    </a>
+                    <!-- FIN NUEVO: Tienda -->
 
                     <div class="relative group" x-data="{ open: false }">
                         <button @click="open = !open" 
@@ -90,7 +99,26 @@
                     </a>
                 </div>
 
+                <!-- Iconos de Carrito y Usuario (Escritorio) -->
                 <div class="hidden md:flex items-center space-x-4">
+                    
+                    <!-- 🛒 NUEVO: Ícono del Carrito de Compras -->
+                    @php
+                        $cart = session('cart', []);
+                        $itemCount = count($cart);
+                    @endphp
+
+                    <a href="{{ route('cart.index') }}" 
+                       class="p-2 relative text-gray-700 hover:text-indigo-600 transition duration-150">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        @if ($itemCount > 0)
+                        <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+                            {{ $itemCount }}
+                        </span>
+                        @endif
+                    </a>
+                    <!-- FIN NUEVO: Carrito -->
+
                     <div class="flex items-center space-x-2">
                         <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-sm">
                             {{ strtoupper(substr(session('user.name', 'D'), 0, 1)) }}
@@ -109,6 +137,7 @@
                     </form>
                 </div>
                 
+                <!-- Botón de Menú Móvil -->
                 <div class="flex md:hidden">
                     <button @click="open = true" type="button" class="text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700">
                         <i class="fas fa-bars h-6 w-6"></i>
@@ -117,6 +146,7 @@
             </div>
         </div>
         
+        <!-- Menú Móvil Desplegable -->
         <div x-show="open" 
              x-transition:enter="duration-200 ease-out" 
              x-transition:enter-start="opacity-0 scale-95" 
@@ -129,6 +159,21 @@
             <div class="px-2 pt-2 space-y-1 sm:px-3">
                 <a href="{{ route('dashboard') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Dashboard</a>
                 <a href="{{ route('citas.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Mis Citas</a>
+                
+                <!-- 📦 NUEVO: Enlace a la Tienda (Móvil) -->
+                <a href="{{ route('products.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">
+                    <i class="fas fa-store mr-1"></i> Tienda
+                </a>
+                <!-- 🛒 NUEVO: Enlace al Carrito (Móvil) -->
+                <a href="{{ route('cart.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-between">
+                    <span><i class="fas fa-shopping-cart mr-1"></i> Carrito</span>
+                    @if ($itemCount > 0)
+                    <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                        {{ $itemCount }}
+                    </span>
+                    @endif
+                </a>
+
                 <a href="{{ route('veterinarias.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Veterinarias</a>
                 <a href="{{ route('entrenadores.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Entrenadores</a>
                 <a href="{{ route('refugios.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50">Refugios</a>
