@@ -73,8 +73,8 @@
                     @php
                         // Definir imágenes locales para las mascotas
                         $localImages = [
-                            'adopcion4.jpg',
-                            'adopcion1.jpg', 
+                            'adopcion1.jpg',
+                            'adopcion4.jpg', 
                             'adopcion3.jpg'
                         ];
                         
@@ -329,7 +329,6 @@
 <script>
 // Variables globales
 let allMascotas = [];
-let isSubmitting = false; // Variable para controlar envíos duplicados
 
 // Inicializar cuando el documento esté listo
 document.addEventListener('DOMContentLoaded', function() {
@@ -338,62 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configurar event listeners
     setupFilters();
-    setupFormSubmission();
 });
-
-// Configurar el envío del formulario
-function setupFormSubmission() {
-    const adoptionForm = document.getElementById('adoption-form');
-    
-    adoptionForm.addEventListener('submit', function(e) {
-        if (isSubmitting) {
-            e.preventDefault();
-            return;
-        }
-        
-        // Mostrar mensaje de confirmación inmediato
-        showSuccessMessage('¡Solicitud enviada con éxito! Está en revisión.');
-        
-        // Deshabilitar el botón para evitar envíos duplicados
-        const submitButton = this.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Enviando...';
-        
-        isSubmitting = true;
-        
-        // Permitir que el formulario se envíe normalmente
-        // El mensaje persistirá después del redirect
-    });
-}
-
-// Función para mostrar mensaje de éxito
-function showSuccessMessage(message) {
-    // Crear elemento de mensaje
-    const successAlert = document.createElement('div');
-    successAlert.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in';
-    successAlert.innerHTML = `
-        <div class="flex items-center">
-            <i class="fas fa-check-circle mr-3 text-xl"></i>
-            <div>
-                <p class="font-semibold">¡Éxito!</p>
-                <p>${message}</p>
-            </div>
-            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `;
-    
-    // Agregar al documento
-    document.body.appendChild(successAlert);
-    
-    // Auto-eliminar después de 5 segundos
-    setTimeout(() => {
-        if (successAlert.parentElement) {
-            successAlert.remove();
-        }
-    }, 5000);
-}
 
 // Configurar filtros y búsqueda
 function setupFilters() {
@@ -472,12 +416,6 @@ function openAdoptionModal(petId, petName) {
 function closeAdoptionModal() {
     document.getElementById('adoption-modal').classList.add('hidden');
     document.getElementById('adoption-form').reset();
-    
-    // Restablecer el botón de enviar
-    const submitButton = document.querySelector('#adoption-form button[type="submit"]');
-    submitButton.disabled = false;
-    submitButton.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Enviar Solicitud';
-    isSubmitting = false;
 }
 
 function sharePet(petId) {
@@ -516,22 +454,6 @@ document.getElementById('adoption-modal').addEventListener('click', function(e) 
 
 .mascota-card {
     transition: all 0.3s ease;
-}
-
-/* Animación para el mensaje de éxito */
-@keyframes fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-in {
-    animation: fade-in 0.3s ease-out;
 }
 </style>
 @endpush

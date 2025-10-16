@@ -1,5 +1,6 @@
 @extends('layouts.app')
 
+<<<<<<< HEAD
 @section('title', 'Productos - PetPedia')
 
 @section('content')
@@ -214,3 +215,4 @@
 </style>
 @endpush
 @endsection
+
