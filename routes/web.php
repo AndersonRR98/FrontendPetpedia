@@ -70,4 +70,8 @@ Route::middleware(['web'])->group(function () {
         Route::get('/{id}', [ProductController::class, 'show'])->name('products.show');
         Route::post('/carrito/agregar', [ProductController::class, 'addToCart'])->name('products.addToCart');
     });
+      Route::prefix('perfil')->group(function () {
+        Route::get('/', [ProfileController::class, 'show'])->name('profile.show');
+        Route::put('/actualizar', [ProfileController::class, 'update'])->name('profile.update');
+    });
 });

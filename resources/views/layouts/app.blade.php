@@ -30,13 +30,6 @@
                         Dashboard
                     </a>
 
-                    <!-- Enlace directo a Mis Citas -->
-                    <a href="{{ route('citas.index') }}" 
-                       class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200 {{ request()->routeIs('citas.*') ? 'text-indigo-600 border-b-2 border-indigo-600' : '' }}">
-                        <i class="fas fa-calendar-alt mr-1"></i>
-                        Mis Citas
-                    </a>
-
                     <!-- Servicios Dropdown -->
                     <div class="relative group" x-data="{ open: false }">
                         <button @click="open = !open" 
@@ -69,15 +62,6 @@
                                 </div>
                             </a>
 
-                            <a href="{{ route('refugios.index') }}" 
-                               class="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-200">
-                                <i class="fas fa-home text-orange-600 mr-3"></i>
-                                <div>
-                                    <p class="font-medium">Refugios</p>
-                                    <p class="text-xs text-gray-500">Conoce los refugios</p>
-                                </div>
-                            </a>
-
                             <!-- Nueva opción para Adopciones -->
                             <a href="{{ route('adopciones.index') }}" 
                                class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition duration-200">
@@ -101,11 +85,11 @@
                     </div>
 
                     <!-- Enlace a Perfil -->
-                    <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200">
-                        <i class="fas fa-user mr-1"></i>
-                        Mi Perfil
-                    </a>
-                </div>
+                   <a href="{{ route('profile.show') }}" 
+   class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200 {{ request()->routeIs('profile.*') ? 'text-indigo-600 border-b-2 border-indigo-600' : '' }}">
+    <i class="fas fa-user mr-1"></i>
+    Mi Perfil
+</a>
 
                 <!-- User Menu - Desktop -->
                 <div class="hidden md:flex items-center space-x-4">
@@ -145,13 +129,6 @@
                         Dashboard
                     </a>
                     
-                    <!-- Mis Citas -->
-                    <a href="{{ route('citas.index') }}" 
-                       class="flex items-center text-gray-700 hover:text-indigo-600 font-medium p-3 rounded-lg hover:bg-indigo-50 transition duration-200">
-                        <i class="fas fa-calendar-alt text-indigo-500 mr-3 w-5"></i>
-                        Mis Citas
-                    </a>
-                    
                     <!-- Servicios -->
                     <div class="space-y-2">
                         <p class="font-medium text-gray-900 px-3 py-2">Servicios</p>
@@ -166,12 +143,6 @@
                            class="flex items-center text-gray-600 hover:text-green-600 ml-4 p-3 rounded-lg hover:bg-green-50 transition duration-200">
                             <i class="fas fa-dumbbell text-green-500 mr-3 w-5"></i>
                             Entrenadores
-                        </a>
-                        
-                        <a href="{{ route('refugios.index') }}" 
-                           class="flex items-center text-gray-600 hover:text-orange-600 ml-4 p-3 rounded-lg hover:bg-orange-50 transition duration-200">
-                            <i class="fas fa-home text-orange-500 mr-3 w-5"></i>
-                            Refugios
                         </a>
 
                         <!-- Nueva opción para Adopciones en móvil -->
@@ -253,7 +224,6 @@
                         <li><a href="{{ route('dashboard') }}" class="hover:text-white transition duration-200">Dashboard</a></li>
                         <li><a href="{{ route('veterinarias.index') }}" class="hover:text-white transition duration-200">Veterinarias</a></li>
                         <li><a href="{{ route('entrenadores.index') }}" class="hover:text-white transition duration-200">Entrenadores</a></li>
-                        <li><a href="{{ route('refugios.index') }}" class="hover:text-white transition duration-200">Refugios</a></li>
                         <li><a href="{{ route('adopciones.index') }}" class="hover:text-white transition duration-200">Adopciones</a></li>
                         <li><a href="{{ route('products.index') }}" class="hover:text-white transition duration-200">Productos</a></li>
                     </ul>

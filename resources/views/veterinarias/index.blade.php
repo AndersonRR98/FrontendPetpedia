@@ -16,29 +16,45 @@
             <div class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1">
                     <input type="text" 
-                           placeholder="Buscar veterinarias..." 
+                           id="search-input"
+                           placeholder="Buscar por nombre de clínica, especialidad..." 
                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                 </div>
                 <div class="flex gap-4">
-                    <select class="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option>Filtrar por especialidad</option>
-                        <option>Medicina General</option>
-                        <option>Cirugía</option>
-                        <option>Dermatología</option>
-                        <option>Cardiología</option>
-                        <option>Oftalmología</option>
+                    <select id="filter-specialization" class="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Todas las especialidades</option>
+                        <option value="Medicina General">Medicina General</option>
+                        <option value="Cirugía">Cirugía</option>
+                        <option value="Dermatología">Dermatología</option>
+                        <option value="Cardiología">Cardiología</option>
+                        <option value="Oftalmología">Oftalmología</option>
+                        <option value="Odontología">Odontología</option>
+                        <option value="Neurología">Neurología</option>
+                        <option value="Oncología">Oncología</option>
                     </select>
-                    <button class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition duration-200">
-                        <i class="fas fa-search"></i>
+                    <button id="clear-filters" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition duration-200 flex items-center">
+                        <i class="fas fa-times mr-2"></i>
+                        Limpiar
                     </button>
                 </div>
             </div>
         </div>
 
+        <!-- Contador de resultados -->
+        <div class="mb-4">
+            <p class="text-gray-600">
+                <span id="veterinarias-count">{{ count($veterinarias) }}</span> veterinaria(s) encontrada(s)
+            </p>
+        </div>
+
         <!-- Lista de Veterinarias -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="veterinarias-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($veterinarias as $index => $veterinaria)
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
+            <div class="veterinaria-card bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group"
+                 data-name="{{ strtolower($veterinaria['clinic_name'] ?? '') }}"
+                 data-specialization="{{ strtolower($veterinaria['specialization'] ?? '') }}"
+                 data-address="{{ strtolower($veterinaria['user']['profile']['address'] ?? '') }}"
+                 data-license="{{ strtolower($veterinaria['veterinary_license'] ?? '') }}">
                 <!-- Imagen Local -->
                 <div class="h-48 bg-gradient-to-br from-indigo-100 to-purple-100 relative overflow-hidden">
                     @php
@@ -145,6 +161,13 @@
             @endforelse
         </div>
 
+        <!-- Estado cuando no hay resultados -->
+        <div id="no-results" class="hidden text-center py-12">
+            <i class="fas fa-search text-gray-400 text-6xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">No se encontraron veterinarias</h3>
+            <p class="text-gray-500">Intenta ajustar los filtros de búsqueda.</p>
+        </div>
+
         <!-- Información sobre las imágenes -->
         <div class="mt-8 text-center text-sm text-gray-500">
             <p>💡 <strong>Nota:</strong> Las imágenes mostradas son de referencia local</p>
@@ -152,13 +175,100 @@
     </div>
 </div>
 
-@push('styles')
-<style>
-    .truncate {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+@push('scripts')
+<script>
+// Variables globales
+let allVeterinarias = [];
+
+// Inicializar cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Guardar todas las veterinarias
+    allVeterinarias = Array.from(document.querySelectorAll('.veterinaria-card'));
+    
+    // Configurar event listeners
+    setupFilters();
+});
+
+// Configurar filtros y búsqueda
+function setupFilters() {
+    const searchInput = document.getElementById('search-input');
+    const filterSpecialization = document.getElementById('filter-specialization');
+    const clearFilters = document.getElementById('clear-filters');
+    
+    // Evento de búsqueda en tiempo real
+    searchInput.addEventListener('input', applyFilters);
+    
+    // Evento para filtro de especialización
+    filterSpecialization.addEventListener('change', applyFilters);
+    
+    // Limpiar filtros
+    clearFilters.addEventListener('click', function() {
+        searchInput.value = '';
+        filterSpecialization.value = '';
+        applyFilters();
+    });
+}
+
+// Aplicar todos los filtros
+function applyFilters() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const specializationFilter = document.getElementById('filter-specialization').value.toLowerCase();
+    
+    let visibleCount = 0;
+    
+    allVeterinarias.forEach(veterinaria => {
+        const name = veterinaria.dataset.name;
+        const specialization = veterinaria.dataset.specialization;
+        const address = veterinaria.dataset.address;
+        const license = veterinaria.dataset.license;
+        
+        // Verificar filtro de especialización
+        const specializationMatch = !specializationFilter || 
+                                   specialization.includes(specializationFilter);
+        
+        // Verificar búsqueda
+        const searchMatch = !searchTerm || 
+                           name.includes(searchTerm) || 
+                           specialization.includes(searchTerm) || 
+                           address.includes(searchTerm) || 
+                           license.includes(searchTerm);
+        
+        // Mostrar u ocultar según los filtros
+        if (specializationMatch && searchMatch) {
+            veterinaria.style.display = 'block';
+            visibleCount++;
+        } else {
+            veterinaria.style.display = 'none';
+        }
+    });
+    
+    // Actualizar contador
+    document.getElementById('veterinarias-count').textContent = visibleCount;
+    
+    // Mostrar/ocultar mensaje de no resultados
+    const noResults = document.getElementById('no-results');
+    const veterinariasContainer = document.getElementById('veterinarias-container');
+    
+    if (visibleCount === 0) {
+        noResults.classList.remove('hidden');
+        veterinariasContainer.classList.add('hidden');
+    } else {
+        noResults.classList.add('hidden');
+        veterinariasContainer.classList.remove('hidden');
     }
+}
+</script>
+
+<style>
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.veterinaria-card {
+    transition: all 0.3s ease;
+}
 </style>
 @endpush
 @endsection

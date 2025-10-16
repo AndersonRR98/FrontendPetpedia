@@ -43,18 +43,21 @@
                 </span>
             </a>
 
-            <!-- Refugios Card -->
-            <a href="{{ route('refugios.index') }}" 
-               class="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition duration-300 border-t-4 border-orange-500">
-                <div class="bg-orange-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fas fa-home text-orange-600 text-3xl"></i>
+            <!-- Adopciones Card -->
+            <a href="{{ route('adopciones.index') }}" 
+               class="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition duration-300 border-t-4 border-purple-500">
+                <div class="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-paw text-purple-600 text-3xl"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-3">Refugios</h3>
-                <p class="text-gray-600 mb-6">Adopta y da un hogar a una mascota</p>
-                <span class="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition duration-200">
-                    Explorar Refugios
+                <h3 class="text-2xl font-bold text-gray-900 mb-3">Adopciones</h3>
+                <p class="text-gray-600 mb-6">Encuentra un compañero peludo para tu familia</p>
+                <span class="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition duration-200">
+                    Ver Mascotas
                 </span>
             </a>
+        </div>
+
+       
         </div>
     </div>
 </div>

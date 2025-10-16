@@ -1,6 +1,5 @@
 @extends('layouts.app')
 
-<<<<<<< HEAD
 @section('title', 'Productos - PetPedia')
 
 @section('content')
@@ -16,7 +15,7 @@
             <a href="#" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition duration-200 font-semibold flex items-center">
                 <i class="fas fa-shopping-cart mr-2"></i>
                 Ver Carrito
-                <span class="bg-white text-indigo-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold ml-2">
+                <span class="bg-white text-indigo-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold ml-2" id="cart-count">
                     {{ count($productos) > 0 ? count($productos) : 0 }}
                 </span>
             </a>
@@ -40,36 +39,41 @@
             <div class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1">
                     <input type="text" 
-                           placeholder="Buscar productos..." 
+                           id="search-input"
+                           placeholder="Buscar por nombre, descripción..." 
                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                 </div>
                 <div class="flex gap-4">
-                    <select class="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option>Todas las categorías</option>
-                        <option>Alimentos</option>
-                        <option>Juguetes</option>
-                        <option>Medicamentos</option>
-                        <option>Accesorios</option>
-                        <option>Higiene</option>
+                    <select id="filter-sort" class="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Ordenar por</option>
+                        <option value="price_asc">Precio: Menor a Mayor</option>
+                        <option value="price_desc">Precio: Mayor a Menor</option>
+                        <option value="name_asc">Nombre A-Z</option>
+                        <option value="name_desc">Nombre Z-A</option>
                     </select>
-                    <select class="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option>Ordenar por</option>
-                        <option>Precio: Menor a Mayor</option>
-                        <option>Precio: Mayor a Menor</option>
-                        <option>Nombre A-Z</option>
-                        <option>Nombre Z-A</option>
-                    </select>
-                    <button class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition duration-200">
-                        <i class="fas fa-search"></i>
+                    <button id="clear-filters" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition duration-200 flex items-center">
+                        <i class="fas fa-times mr-2"></i>
+                        Limpiar
                     </button>
                 </div>
             </div>
         </div>
 
+        <!-- Contador de resultados -->
+        <div class="mb-4">
+            <p class="text-gray-600">
+                <span id="productos-count">{{ count($productos) }}</span> producto(s) encontrado(s)
+            </p>
+        </div>
+
         <!-- Lista de Productos -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div id="productos-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @forelse($productos as $index => $producto)
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
+            <div class="producto-card bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group"
+                 data-name="{{ strtolower($producto['name'] ?? '') }}"
+                 data-description="{{ strtolower($producto['description'] ?? '') }}"
+                 data-price="{{ $producto['price'] ?? 0 }}"
+                 data-veterinary="{{ strtolower($producto['veterinary']['clinic_name'] ?? '') }}">
                 <!-- Imagen del Producto -->
                 <div class="h-48 bg-gradient-to-br from-gray-100 to-blue-100 relative overflow-hidden">
                     @php
@@ -192,6 +196,13 @@
             @endforelse
         </div>
 
+        <!-- Estado cuando no hay resultados -->
+        <div id="no-results" class="hidden text-center py-12">
+            <i class="fas fa-search text-gray-400 text-6xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">No se encontraron productos</h3>
+            <p class="text-gray-500">Intenta ajustar los filtros de búsqueda.</p>
+        </div>
+
         <!-- Información sobre las imágenes -->
         <div class="mt-8 text-center text-sm text-gray-500">
             <p>💡 <strong>Nota:</strong> Las imágenes mostradas son de referencia local</p>
@@ -199,20 +210,210 @@
     </div>
 </div>
 
-@push('styles')
+@push('scripts')
+<script>
+// Variables globales
+let allProductos = [];
+
+// Inicializar cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Guardar todos los productos
+    allProductos = Array.from(document.querySelectorAll('.producto-card'));
+    
+    // Configurar event listeners
+    setupFilters();
+});
+
+// Configurar filtros y búsqueda
+function setupFilters() {
+    const searchInput = document.getElementById('search-input');
+    const filterSort = document.getElementById('filter-sort');
+    const clearFilters = document.getElementById('clear-filters');
+    
+    // Evento de búsqueda en tiempo real
+    searchInput.addEventListener('input', applyFilters);
+    
+    // Evento para ordenamiento
+    filterSort.addEventListener('change', applyFilters);
+    
+    // Limpiar filtros
+    clearFilters.addEventListener('click', function() {
+        searchInput.value = '';
+        filterSort.value = '';
+        applyFilters();
+    });
+}
+
+// Aplicar todos los filtros
+function applyFilters() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const sortFilter = document.getElementById('filter-sort').value;
+    
+    let visibleProductos = [];
+    
+    // Primero aplicar filtros de búsqueda
+    allProductos.forEach(producto => {
+        const name = producto.dataset.name;
+        const description = producto.dataset.description;
+        const veterinary = producto.dataset.veterinary;
+        
+        // Verificar búsqueda
+        const searchMatch = !searchTerm || 
+                           name.includes(searchTerm) || 
+                           description.includes(searchTerm) || 
+                           veterinary.includes(searchTerm);
+        
+        // Mostrar u ocultar según los filtros
+        if (searchMatch) {
+            producto.style.display = 'block';
+            visibleProductos.push(producto);
+        } else {
+            producto.style.display = 'none';
+        }
+    });
+    
+    // Aplicar ordenamiento si está seleccionado
+    if (sortFilter) {
+        visibleProductos = sortProductos(visibleProductos, sortFilter);
+        
+        // Reordenar en el DOM
+        const container = document.getElementById('productos-container');
+        visibleProductos.forEach(producto => {
+            container.appendChild(producto);
+        });
+    }
+    
+    // Actualizar contador
+    document.getElementById('productos-count').textContent = visibleProductos.length;
+    
+    // Mostrar/ocultar mensaje de no resultados
+    const noResults = document.getElementById('no-results');
+    const productosContainer = document.getElementById('productos-container');
+    
+    if (visibleProductos.length === 0) {
+        noResults.classList.remove('hidden');
+        productosContainer.classList.add('hidden');
+    } else {
+        noResults.classList.add('hidden');
+        productosContainer.classList.remove('hidden');
+    }
+}
+
+// Función para ordenar productos
+function sortProductos(productos, sortType) {
+    return productos.sort((a, b) => {
+        switch(sortType) {
+            case 'price_asc':
+                return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+            case 'price_desc':
+                return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+            case 'name_asc':
+                return a.dataset.name.localeCompare(b.dataset.name);
+            case 'name_desc':
+                return b.dataset.name.localeCompare(a.dataset.name);
+            default:
+                return 0;
+        }
+    });
+}
+
+// Función para agregar al carrito con feedback
+document.addEventListener('DOMContentLoaded', function() {
+    const cartForms = document.querySelectorAll('form[action*="addToCart"]');
+    
+    cartForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            
+            // Mostrar loading
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Agregando...';
+            
+            // Simular envío (aquí iría tu lógica real de AJAX)
+            setTimeout(() => {
+                // Mostrar mensaje de éxito
+                showSuccessMessage('Producto agregado al carrito');
+                
+                // Actualizar contador del carrito
+                const cartCount = document.getElementById('cart-count');
+                let currentCount = parseInt(cartCount.textContent) || 0;
+                cartCount.textContent = currentCount + 1;
+                
+                // Restaurar botón
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+                
+                // En un caso real, aquí enviarías el formulario
+                // this.submit();
+            }, 1000);
+        });
+    });
+});
+
+// Función para mostrar mensaje de éxito
+function showSuccessMessage(message) {
+    // Crear elemento de mensaje
+    const successAlert = document.createElement('div');
+    successAlert.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in';
+    successAlert.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-check-circle mr-3 text-xl"></i>
+            <div>
+                <p class="font-semibold">¡Éxito!</p>
+                <p>${message}</p>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    // Agregar al documento
+    document.body.appendChild(successAlert);
+    
+    // Auto-eliminar después de 5 segundos
+    setTimeout(() => {
+        if (successAlert.parentElement) {
+            successAlert.remove();
+        }
+    }, 5000);
+}
+</script>
+
 <style>
-    .truncate {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.producto-card {
+    transition: all 0.3s ease;
+}
+
+/* Animación para el mensaje de éxito */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
     }
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}
 </style>
 @endpush
 @endsection
-
