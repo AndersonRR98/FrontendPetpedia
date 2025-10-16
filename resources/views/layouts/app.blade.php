@@ -74,13 +74,33 @@
                                 <i class="fas fa-home text-orange-600 mr-3"></i>
                                 <div>
                                     <p class="font-medium">Refugios</p>
+                                    <p class="text-xs text-gray-500">Conoce los refugios</p>
+                                </div>
+                            </a>
+
+                            <!-- Nueva opción para Adopciones -->
+                            <a href="{{ route('adopciones.index') }}" 
+                               class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition duration-200">
+                                <i class="fas fa-paw text-purple-600 mr-3"></i>
+                                <div>
+                                    <p class="font-medium">Adopciones</p>
                                     <p class="text-xs text-gray-500">Adopta una mascota</p>
+                                </div>
+                            </a>
+
+                            <!-- Nueva opción para Productos -->
+                            <a href="{{ route('products.index') }}" 
+                               class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                                <i class="fas fa-shopping-bag text-blue-600 mr-3"></i>
+                                <div>
+                                    <p class="font-medium">Productos</p>
+                                    <p class="text-xs text-gray-500">Compra para tu mascota</p>
                                 </div>
                             </a>
                         </div>
                     </div>
 
-                    <!-- Enlace a Perfil (puedes implementarlo después) -->
+                    <!-- Enlace a Perfil -->
                     <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium transition duration-200">
                         <i class="fas fa-user mr-1"></i>
                         Mi Perfil
@@ -153,6 +173,20 @@
                             <i class="fas fa-home text-orange-500 mr-3 w-5"></i>
                             Refugios
                         </a>
+
+                        <!-- Nueva opción para Adopciones en móvil -->
+                        <a href="{{ route('adopciones.index') }}" 
+                           class="flex items-center text-gray-600 hover:text-purple-600 ml-4 p-3 rounded-lg hover:bg-purple-50 transition duration-200">
+                            <i class="fas fa-paw text-purple-500 mr-3 w-5"></i>
+                            Adopciones
+                        </a>
+
+                        <!-- Nueva opción para Productos en móvil -->
+                        <a href="{{ route('products.index') }}" 
+                           class="flex items-center text-gray-600 hover:text-blue-600 ml-4 p-3 rounded-lg hover:bg-blue-50 transition duration-200">
+                            <i class="fas fa-shopping-bag text-blue-500 mr-3 w-5"></i>
+                            Productos
+                        </a>
                     </div>
 
                     <!-- Mi Perfil -->
@@ -220,6 +254,8 @@
                         <li><a href="{{ route('veterinarias.index') }}" class="hover:text-white transition duration-200">Veterinarias</a></li>
                         <li><a href="{{ route('entrenadores.index') }}" class="hover:text-white transition duration-200">Entrenadores</a></li>
                         <li><a href="{{ route('refugios.index') }}" class="hover:text-white transition duration-200">Refugios</a></li>
+                        <li><a href="{{ route('adopciones.index') }}" class="hover:text-white transition duration-200">Adopciones</a></li>
+                        <li><a href="{{ route('products.index') }}" class="hover:text-white transition duration-200">Productos</a></li>
                     </ul>
                 </div>
 

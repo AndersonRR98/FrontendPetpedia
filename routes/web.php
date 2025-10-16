@@ -1,8 +1,6 @@
 <?php
 namespace App\Http\Controllers;
 
-
-
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -23,7 +21,8 @@ Route::view('/cliente/dashboard', 'roles.cliente');
 Route::view('/veterinario/dashboard', 'roles.veterinario');
 Route::view('/entrenador/dashboard', 'roles.entrenador');
 Route::view('/refugio/dashboard', 'roles.refugio');
-//Autenticación (usando layout guest)
+
+// Autenticación (usando layout guest)
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', [FrontAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [FrontAuthController::class, 'login']);
@@ -53,10 +52,22 @@ Route::middleware(['web'])->group(function () {
         Route::get('/', [ShelterController::class, 'index'])->name('refugios.index');
         Route::get('/{id}', [ShelterController::class, 'show'])->name('refugios.show');
     });
-// Rutas de Citas - SIN el namespace duplicado
-Route::get('/citas', [AppointmentController::class, 'index'])->name('citas.index');
-Route::post('/citas', [AppointmentController::class, 'store'])->name('citas.store');
-Route::get('/citas/create', [AppointmentController::class, 'create'])->name('citas.create');
-Route::get('/citas/{id}', [AppointmentController::class, 'show'])->name('citas.show');
-Route::delete('/citas/{id}', [AppointmentController::class, 'destroy'])->name('citas.destroy');
+
+    // Rutas de Citas - SIN el namespace duplicado
+    Route::get('/citas', [AppointmentController::class, 'index'])->name('citas.index');
+    Route::post('/citas', [AppointmentController::class, 'store'])->name('citas.store');
+    Route::get('/citas/create', [AppointmentController::class, 'create'])->name('citas.create');
+    Route::get('/citas/{id}', [AppointmentController::class, 'show'])->name('citas.show');
+    Route::delete('/citas/{id}', [AppointmentController::class, 'destroy'])->name('citas.destroy');
+
+    // Rutas de Adopciones
+    Route::get('/adopciones', [AdoptionController::class, 'index'])->name('adopciones.index');
+    Route::post('/adopciones', [AdoptionController::class, 'store'])->name('adopciones.store');
+
+    // === AGREGAR AQUÍ LAS RUTAS DE PRODUCTOS ===
+    Route::prefix('productos')->group(function () {
+        Route::get('/', [ProductController::class, 'index'])->name('products.index');
+        Route::get('/{id}', [ProductController::class, 'show'])->name('products.show');
+        Route::post('/carrito/agregar', [ProductController::class, 'addToCart'])->name('products.addToCart');
+    });
 });
