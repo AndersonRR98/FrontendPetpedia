@@ -74,8 +74,8 @@
                         // Definir imágenes locales para las mascotas
                         $localImages = [
                             'adopcion4.jpg',
-                            'adopcion1.jpg', 
-                            'adopcion3.jpg'
+                            'adopcion3.jpg', 
+                            'adopcion1.jpg'
                         ];
                         
                         // Usar imagen cíclica basada en el índice

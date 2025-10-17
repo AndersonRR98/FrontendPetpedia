@@ -29,8 +29,7 @@ class TrainerController extends Controller
             return redirect()->route('entrenadores.index')
                 ->with('error', $response['error'] ?? 'Entrenador no encontrado');
         }
-
-        $entrenador = $response;
-        return view('entrenadores.show', compact('entrenador'));
+$entrenador = $response;
+return view('entrenadores.show', compact('entrenador'));
     }
 }

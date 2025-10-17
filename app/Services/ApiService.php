@@ -24,77 +24,99 @@ class ApiService
         return $this->makeRequest('post', $endpoint, $data);
     }
 
-    protected function makeRequest($method, $endpoint, $data = [])
-    {
-        $token = session('token');
-        
-        if (!$token) {
-            Log::warning('No token found for API request', ['endpoint' => $endpoint]);
-            return ['success' => false, 'error' => 'No hay token de autenticación'];
-        }
+   protected function makeRequest($method, $endpoint, $data = [])
+{
+    $token = session('token');
+    
+    if (!$token) {
+        Log::warning('No token found for API request', ['endpoint' => $endpoint]);
+        return ['success' => false, 'error' => 'No hay token de autenticación'];
+    }
 
-        $url = $this->baseUrl . $endpoint;
-        
-        Log::info('Making API request', [
-            'method' => $method,
-            'url' => $url,
-            'token_exists' => !empty($token)
+    $url = $this->baseUrl . $endpoint;
+    
+    Log::info('🚀 Making API request', [
+        'method' => $method,
+        'url' => $url,
+        'data' => $data,
+        'token_exists' => !empty($token)
+    ]);
+
+    try {
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ])
+        ->timeout(10)
+        ->retry(2, 100)
+        ->{$method}($url, $data);
+
+        // ✅ LOG COMPLETO DE LA RESPUESTA
+        Log::info('📡 API Response COMPLETA', [
+            'status' => $response->status(),
+            'successful' => $response->successful(),
+            'headers' => $response->headers(),
+            'body' => $response->body(), // ⬅️ ESTO ES IMPORTANTE
+            'endpoint' => $endpoint
         ]);
 
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $token,
-                'Accept' => 'application/json',
-            ])
-            ->timeout(10) // Timeout más corto
-            ->retry(2, 100) // Reintentar 2 veces
-            ->{$method}($url, $data);
-
-            Log::info('API Response', [
-                'status' => $response->status(),
-                'success' => $response->successful(),
-                'endpoint' => $endpoint
-            ]);
-
-            if ($response->successful()) {
-                return $response->json();
-            }
-
-            // Si es error 401, limpiar sesión
-            if ($response->status() === 401) {
-                session()->forget(['token', 'user']);
-                return ['success' => false, 'error' => 'Sesión expirada'];
-            }
-
-            $errorBody = $response->body();
-            Log::error('API Error Response', [
-                'status' => $response->status(),
-                'endpoint' => $endpoint,
-                'response' => $errorBody
-            ]);
-
-            return [
-                'success' => false, 
-                'error' => 'Error en la API: ' . $response->status(),
-                'status' => $response->status()
-            ];
-
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::error('API Connection Timeout', [
-                'endpoint' => $endpoint,
-                'error' => $e->getMessage()
-            ]);
-            return ['success' => false, 'error' => 'Timeout de conexión con la API'];
-            
-        } catch (\Exception $e) {
-            Log::error('API Request Exception', [
-                'endpoint' => $endpoint,
-                'error' => $e->getMessage(),
-                'url' => $url
-            ]);
-            return ['success' => false, 'error' => 'Error de conexión: ' . $e->getMessage()];
+        if ($response->successful()) {
+            $jsonResponse = $response->json();
+            Log::info('✅ API Request Successful', ['response_data' => $jsonResponse]);
+            return $jsonResponse;
         }
+
+        // Si es error 401, limpiar sesión
+        if ($response->status() === 401) {
+            session()->forget(['token', 'user']);
+            Log::warning('🔐 Session expired - 401 Unauthorized');
+            return ['success' => false, 'error' => 'Sesión expirada'];
+        }
+
+        // ✅ LOG DETALLADO DEL ERROR
+        $errorBody = $response->body();
+        Log::error('❌ API Error Response DETAILS', [
+            'status' => $response->status(),
+            'endpoint' => $endpoint,
+            'response_body' => $errorBody,
+            'response_json' => $response->json() // ⬅️ Por si devuelve JSON con error
+        ]);
+
+        // Intentar obtener mensaje de error del JSON
+        $errorData = $response->json();
+        $errorMessage = isset($errorData['message']) ? $errorData['message'] : 
+                       (isset($errorData['error']) ? $errorData['error'] : 
+                       'Error en la API: ' . $response->status());
+
+        return [
+            'success' => false, 
+            'error' => $errorMessage,
+            'status' => $response->status(),
+            'body' => $errorBody
+        ];
+
+    } catch (\Illuminate\Http\Client\ConnectionException $e) {
+        Log::error('⏰ API Connection Timeout', [
+            'endpoint' => $endpoint,
+            'error' => $e->getMessage()
+        ]);
+        return ['success' => false, 'error' => 'Timeout de conexión con la API'];
+        
+    } catch (\Exception $e) {
+        Log::error('💥 API Request Exception', [
+            'endpoint' => $endpoint,
+            'error' => $e->getMessage(),
+            'url' => $url
+        ]);
+        return ['success' => false, 'error' => 'Error de conexión: ' . $e->getMessage()];
     }
+}
+
+    public function put($endpoint, $data = [])
+{
+    return $this->makeRequest('put', $endpoint, $data);
+}
     // En App/Services/ApiService.php, agrega este método:
 public function delete($endpoint)
 {

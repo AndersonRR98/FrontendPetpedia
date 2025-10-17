@@ -15,28 +15,34 @@ class AdoptionController extends Controller
         $this->apiService = $apiService;
     }
 
-    public function index()
-    {
-        if (!session('token')) {
-            return redirect()->route('login')->with('error', 'Por favor inicia sesión');
-        }
-
-        $response = $this->apiService->get('/adoptions');
-        
-        if (isset($response['success']) && !$response['success']) {
-            return redirect()->route('dashboard')
-                ->with('error', $response['error'] ?? 'Error al cargar las adopciones');
-        }
-
-        $adopciones = $response ?? [];
-        
-        // Extraer las mascotas de las adopciones (evitando duplicados)
-        $mascotasAdopcion = $this->extraerMascotasDeAdopciones($adopciones);
-        
-        return view('adopciones.index', [
-            'mascotas' => $mascotasAdopcion
-        ]);
+   public function index()
+{
+    if (!session('token')) {
+        return redirect()->route('login')->with('error', 'Por favor inicia sesión');
     }
+
+    // Obtener todas las adopciones desde la API
+    $response = $this->apiService->get('/adoptions');
+    
+    if (isset($response['success']) && !$response['success']) {
+        return redirect()->route('dashboard')
+            ->with('error', $response['error'] ?? 'Error al cargar las adopciones');
+    }
+
+    $adopciones = $response ?? [];
+
+    $adopcionesPendientes = array_filter($adopciones, function ($adopcion) {
+        return isset($adopcion['status']) && $adopcion['status'] === 'pending';
+    });
+
+    // Extraer las mascotas de las adopciones pendientes
+    $mascotasAdopcion = $this->extraerMascotasDeAdopciones($adopcionesPendientes);
+    
+    return view('adopciones.index', [
+        'mascotas' => $mascotasAdopcion
+    ]);
+}
+
 
     /**
      * Extrae las mascotas de las adopciones EVITANDO DUPLICADOS
@@ -62,7 +68,6 @@ class AdoptionController extends Controller
                     $mascotasIds[] = $mascotaId;
                 }
             }
-            // Si la API no incluye la mascota anidada, pero sí tiene pet_id
             elseif (isset($adopcion['pet_id'])) {
                 $petId = $adopcion['pet_id'];
                 

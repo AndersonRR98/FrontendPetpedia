@@ -41,21 +41,19 @@
 
                     <!-- Contenido -->
                     <div class="p-6">
+                        @php
+                            $localImages = [
+                                'entrenador1.jpg',
+                                'entrenador2.jpg', 
+                                'entrenador3.jpg',
+                                'entrenador4.jpg'
+                            ];
+                            $imageIndex = ($entrenador['id'] ?? 0) % count($localImages);
+                            $localImage = $localImages[$imageIndex];
+                        @endphp
+                        
                         <!-- Imagen -->
                         <div class="text-center mb-6">
-                            @php
-                                $localImages = [
-                                    'entrenador1.jpg',
-                                    'entrenador2.jpg', 
-                                    'entrenador3.jpg',
-                                    'entrenador4.jpg'
-                                   
-                                ];
-                                
-                                $imageIndex = ($entrenador['id'] ?? 0) % count($localImages);
-                                $localImage = $localImages[$imageIndex];
-                            @endphp
-                            
                             <img 
                                 src="{{ asset('images/entrenadores/' . $localImage) }}" 
                                 alt="{{ $entrenador['user']['name'] ?? 'Entrenador' }}"
@@ -70,7 +68,6 @@
 
                         <!-- Información General -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <!-- Información Profesional -->
                             <div>
                                 <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                                     <i class="fas fa-info-circle text-green-500 mr-2"></i>
@@ -101,7 +98,7 @@
                                 </div>
                             </div>
 
-                            <!-- Calificaciones y Rating -->
+                            <!-- Calificaciones -->
                             <div>
                                 <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                                     <i class="fas fa-star text-yellow-500 mr-2"></i>
@@ -133,8 +130,7 @@
                             </div>
                         </div>
 
-                        <!-- Calificaciones y Certificaciones -->
-                        @if(isset($entrenador['qualifications']) && !empty($entrenador['qualifications']))
+                        @if(!empty($entrenador['qualifications']))
                         <div class="mb-6">
                             <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                                 <i class="fas fa-certificate text-purple-500 mr-2"></i>
@@ -146,7 +142,6 @@
                         </div>
                         @endif
 
-                        <!-- Información de Contacto -->
                         @if(isset($entrenador['user']))
                         <div>
                             <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -178,56 +173,100 @@
             </div>
 
             <!-- Sidebar -->
-            <div class="space-y-6">
-                <!-- Acciones Rápidas -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="bg-green-600 text-white px-4 py-3">
-                        <h3 class="font-semibold flex items-center">
-                            <i class="fas fa-bolt mr-2"></i>
-                            Contactar Entrenador
-                        </h3>
-                    </div>
-                    <div class="p-4 space-y-3">
-                        @if(isset($entrenador['user']['profile']['phone']))
-                        <a href="tel:{{ $entrenador['user']['profile']['phone'] }}" 
-                           class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200 font-semibold flex items-center justify-center">
-                            <i class="fas fa-phone mr-2"></i>
-                            Llamar Ahora
-                        </a>
-                        @endif
-                        
-                        @if(isset($entrenador['user']['email']))
-                        <a href="mailto:{{ $entrenador['user']['email'] }}" 
-                           class="w-full border border-green-600 text-green-600 py-3 px-4 rounded-lg hover:bg-green-50 transition duration-200 font-semibold flex items-center justify-center">
-                            <i class="fas fa-envelope mr-2"></i>
-                            Enviar Email
-                        </a>
-                        @endif
-                        
-                        <button class="w-full border border-yellow-600 text-yellow-600 py-3 px-4 rounded-lg hover:bg-yellow-50 transition duration-200 font-semibold flex items-center justify-center">
-                            <i class="fas fa-calendar-plus mr-2"></i>
-                            Solicitar Sesión
-                        </button>
-                    </div>
+<div class="space-y-6">
+    <!-- Formulario de Solicitud de Sesión -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="bg-green-600 text-white px-4 py-3">
+            <h3 class="font-semibold flex items-center">
+                <i class="fas fa-calendar-plus mr-2"></i>
+                Solicitar Sesión
+            </h3>
+        </div>
+        <div class="p-4">
+            <form action="{{ route('citas.storeTrainer') }}" method="POST" class="space-y-4">
+                @csrf
+                <input type="hidden" name="trainer_id" value="{{ $entrenador['id'] ?? '' }}">
+
+                <!-- Fecha -->
+                <div>
+                    <label for="date" class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-calendar-day mr-1"></i>
+                        Fecha de la sesión
+                    </label>
+                    <input 
+                        type="date" 
+                        id="date" 
+                        name="date"
+                        min="{{ date('Y-m-d') }}"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition duration-200"
+                        required
+                    >
                 </div>
 
-                <!-- Volver a la lista -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="bg-gray-600 text-white px-4 py-3">
-                        <h3 class="font-semibold flex items-center">
-                            <i class="fas fa-arrow-left mr-2"></i>
-                            Navegación
-                        </h3>
-                    </div>
-                    <div class="p-4">
-                        <a href="{{ route('entrenadores.index') }}" 
-                           class="w-full bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition duration-200 font-semibold flex items-center justify-center">
-                            <i class="fas fa-list mr-2"></i>
-                            Volver a Entrenadores
-                        </a>
-                    </div>
+                <!-- Descripción -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-file-alt mr-1"></i>
+                        Descripción / Objetivo de la sesión
+                    </label>
+                    <textarea 
+                        id="description" 
+                        name="description"
+                        rows="4"
+                        placeholder="Ejemplo: entrenamiento básico para mi perro, corrección de conducta, etc."
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition duration-200 resize-none"
+                        required
+                    ></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Describe brevemente qué esperas lograr en la sesión</p>
                 </div>
-            </div>
+
+                <!-- Botón de envío -->
+                <button 
+                    type="submit"
+                    class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200 font-semibold flex items-center justify-center"
+                >
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Solicitar Sesión
+                </button>
+            </form>
+
+            @if($errors->any())
+                <div class="mt-4 p-3 bg-red-100 text-red-800 rounded-lg">
+                    <ul class="list-disc list-inside">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @if(session('success'))
+                <div class="mt-4 p-3 bg-green-100 text-green-800 rounded-lg">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    {{ session('success') }}
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Volver -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="bg-gray-600 text-white px-4 py-3">
+            <h3 class="font-semibold flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Navegación
+            </h3>
+        </div>
+        <div class="p-4">
+            <a href="{{ route('entrenadores.index') }}" 
+                class="w-full bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition duration-200 font-semibold flex items-center justify-center">
+                <i class="fas fa-list mr-2"></i>
+                Volver a Entrenadores
+            </a>
+        </div>
+    </div>
+</div>
+
         </div>
     </div>
 </div>

@@ -15,26 +15,29 @@ class VeterinaryController extends Controller
     }
 
     public function index()
-    {
-        // Verificar si el usuario está autenticado
-        if (!session('token')) {
-            return redirect()->route('login')->with('error', 'Por favor inicia sesión');
-        }
-
-        // Consumir el endpoint de veterinarias de tu API
-        $response = $this->apiService->get('/veterinaries');
-        
-        if (isset($response['success']) && !$response['success']) {
-            return redirect()->route('dashboard')
-                ->with('error', $response['error'] ?? 'Error al cargar las veterinarias');
-        }
-
-        // Tu API retorna un array de veterinarias
-        $veterinarias = $response ?? [];
-        
-        return view('veterinarias.index', compact('veterinarias'));
+{
+    if (!session('token')) {
+        return redirect()->route('login')->with('error', 'Por favor inicia sesión');
     }
 
+    $response = $this->apiService->get('/veterinaries');
+
+    if (isset($response['success']) && !$response['success']) {
+        return redirect()->route('dashboard')
+            ->with('error', $response['error'] ?? 'Error al cargar las veterinarias');
+    }
+
+    // Maneja distintas estructuras posibles
+    if (isset($response['data'])) {
+        $veterinarias = $response['data'];
+    } elseif (isset($response['data']['data'])) {
+        $veterinarias = $response['data']['data'];
+    } else {
+        $veterinarias = $response;
+    }
+
+    return view('veterinarias.index', compact('veterinarias'));
+}
     public function show($id)
     {
         // Verificar si el usuario está autenticado

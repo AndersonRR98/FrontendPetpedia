@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\ApiService;
+use Illuminate\Support\Facades\Log;
 
 class AppointmentController extends Controller
 {
@@ -13,107 +14,143 @@ class AppointmentController extends Controller
     {
         $this->apiService = $apiService;
     }
-
-    /**
-     * Mostrar lista de citas del usuario
-     */
-    public function index()
+     public function index()
     {
-        $response = $this->apiService->get('/appointments');
-
-        if ($response['success'] ?? false) {
-            $citas = $response;
-            return view('citas.index', compact('citas'));
+        if (!session('token')) {
+            return redirect()->route('login')->with('error', 'Por favor inicia sesión');
         }
 
-        $error = $response['error'] ?? 'Error al cargar las citas';
-        return view('citas.index', ['citas' => []])->withErrors(['error' => $error]);
+        // Obtener citas del usuario actual
+        $response = $this->apiService->get('/appointments');
+        
+        Log::info('Respuesta de citas index:', ['response' => $response]);
+        
+        if (isset($response['success']) && !$response['success']) {
+            $appointments = [];
+        } else {
+            $appointments = $response;
+        }
+
+        return view('citas.index', compact('appointments'));
     }
 
-    /**
-     * Mostrar formulario para crear cita
-     */
-    public function create()
-    {
-        // Obtener veterinarias para el select
-        $veterinariasResponse = $this->apiService->get('/veterinaries');
-        $veterinarias = $veterinariasResponse['success'] ?? false ? $veterinariasResponse : [];
-
-        return view('citas.create', compact('veterinarias'));
-    }
-
-    /**
-     * Guardar nueva cita
-     */
-  /**
- * Guardar nueva cita
- */
-public function store(Request $request)
+ public function store(Request $request)
 {
-    // Verificar token primero
+    Log::info('=== 🎯 INICIANDO CREACIÓN DE CITA ===');
+    Log::info('📝 Datos del formulario:', $request->all());
+
     if (!session('token')) {
         return redirect()->route('login')
-            ->withErrors(['error' => 'Por favor inicia sesión para solicitar una cita']);
+            ->with('error', 'Por favor inicia sesión para agendar una cita');
     }
 
-    $request->validate([
-        'date' => 'required|date|after:today',
-        'description' => 'required|string|min:10|max:500',
-        'veterinary_id' => 'required|integer|min:1',
-    ]);
+    // Validar los datos dinámicamente
+    try {
+        $validated = $request->validate([
+            'date' => 'required|date|after:today',
+            'description' => 'required|string|min:10|max:500',
+            'veterinary_id' => 'nullable|integer',
+            'trainer_id' => 'nullable|integer',
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        Log::error('❌ Error de validación:', $e->errors());
+        return redirect()->back()
+            ->withErrors($e->errors())
+            ->withInput();
+    }
 
-    $response = $this->apiService->post('/appointments', [
+    // Detectar si la cita es para veterinaria o entrenador
+    $appointmentData = [
         'date' => $request->date,
         'description' => $request->description,
-        'veterinary_id' => $request->veterinary_id,
-        'status' => 'pending'
-    ]);
+        'status' => 'pending',
+        'veterinary_id' => $request->veterinary_id ?? null,
+        'trainer_id' => $request->trainer_id ?? null,
+    ];
 
-    if ($response['success'] ?? false) {
-        return redirect()->route('citas.index')
-            ->with('success', 'Cita solicitada exitosamente. Te contactaremos para confirmarla.');
-    }
+    Log::info('📤 Enviando a API:', $appointmentData);
 
-    // Manejar específicamente el error 401
-    if (isset($response['error']) && str_contains($response['error'], 'Sesión expirada')) {
-        session()->forget(['token', 'user']);
-        return redirect()->route('login')
-            ->withErrors(['error' => 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.']);
-    }
+    try {
+        $response = $this->apiService->post('/appointments', $appointmentData);
+        Log::info('📥 Respuesta API:', [$response]);
 
-    $error = $response['error'] ?? 'Error al crear la cita';
-    return back()->withErrors(['error' => $error])->withInput();
-}
-    /**
-     * Mostrar detalles de una cita
-     */
-    public function show($id)
-    {
-        $response = $this->apiService->get("/appointments/{$id}");
-
-        if ($response['success'] ?? false) {
-            $cita = $response;
-            return view('citas.show', compact('cita'));
+        if (isset($response['id'])) {
+            return redirect()->back()->with('success', 'Cita con la veterinaria Solicitada su estado actual es pendiente de confirmar ');
         }
 
-        $error = $response['error'] ?? 'Cita no encontrada';
-        return redirect()->route('citas.index')->withErrors(['error' => $error]);
+        $errorMessage = $response['error'] ?? 'Error desconocido al agendar la cita';
+        Log::error('❌ Error de API:', ['error' => $errorMessage]);
+
+        return redirect()->back()
+            ->with('error', $errorMessage)
+            ->withInput();
+    } catch (\Exception $e) {
+        Log::error('❌ Excepción en store:', ['error' => $e->getMessage()]);
+        return redirect()->back()
+            ->with('error', 'Error de conexión: ' . $e->getMessage())
+            ->withInput();
     }
-
-    /**
-     * Cancelar una cita
-     */
-// En AppointmentController, actualiza el método destroy:
-public function destroy($id)
-{
-    $response = $this->apiService->delete("/appointments/{$id}");
-
-    if ($response['success'] ?? false) {
-        return redirect()->route('citas.index')
-            ->with('success', 'Cita cancelada exitosamente');
-    }
-
-    $error = $response['error'] ?? 'Error al cancelar la cita';
-    return back()->withErrors(['error' => $error]);
 }
+
+public function storeTrainer(Request $request)
+{
+    Log::info('=== 🎯 INICIANDO CREACIÓN DE CITA CON TRAINER ===');
+    Log::info('📝 Datos del formulario:', $request->all());
+
+    if (!session('token')) {
+        return redirect()->route('login')
+            ->with('error', 'Por favor inicia sesión para agendar una cita con el entrenador');
+    }
+
+    try {
+        $validated = $request->validate([
+            'trainer_id' => 'required|integer',
+            'date' => 'required|date|after:today',
+            'description' => 'required|string|min:10|max:500',
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        Log::error('❌ Error de validación (Trainer):', $e->errors());
+        return redirect()->back()
+            ->withErrors($e->errors())
+            ->withInput();
+    }
+
+    // ✅ Datos específicos para entrenadores
+    $appointmentData = [
+        'trainer_id' => (int) $request->trainer_id,
+        'date' => $request->date,
+        'description' => $request->description,
+        'status' => 'pending',
+        'veterinary_id' => null,
+    ];
+
+    Log::info('📤 Enviando a API (Trainer):', $appointmentData);
+
+    try {
+        $response = $this->apiService->post('/appointments', $appointmentData);
+
+        Log::info('📥 Respuesta API (Trainer):', [$response]);
+
+        if (isset($response['id']) && isset($response['trainer_id'])) {
+            return redirect()->back()
+                ->with('success', 'Cita con el entrenador Solicitada su estado actual es pendiente de confirmar.');
+        }
+
+        $errorMessage = $response['error'] ?? $response['message'] ?? 'Error al agendar la cita con el entrenador';
+        Log::error('❌ Error de API (Trainer):', ['error' => $errorMessage]);
+
+        return redirect()->back()
+            ->with('error', $errorMessage)
+            ->withInput();
+
+    } catch (\Exception $e) {
+        Log::error('❌ Excepción al agendar cita con trainer:', ['error' => $e->getMessage()]);
+        return redirect()->back()
+            ->with('error', 'Error de conexión: ' . $e->getMessage())
+            ->withInput();
+    }
+}
+
+
+   
 }
