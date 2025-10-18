@@ -11,7 +11,7 @@ class ApiService
 
     public function __construct()
     {
-        $this->baseUrl = env('API_URL', 'http://localhost:8001/api');
+        $this->baseUrl = env('API_URL', 'http://localhost:8000/api');
     }
 
     public function get($endpoint)
@@ -52,12 +52,11 @@ class ApiService
         ->retry(2, 100)
         ->{$method}($url, $data);
 
-        // ✅ LOG COMPLETO DE LA RESPUESTA
         Log::info('📡 API Response COMPLETA', [
             'status' => $response->status(),
             'successful' => $response->successful(),
             'headers' => $response->headers(),
-            'body' => $response->body(), // ⬅️ ESTO ES IMPORTANTE
+            'body' => $response->body(), 
             'endpoint' => $endpoint
         ]);
 
@@ -74,16 +73,14 @@ class ApiService
             return ['success' => false, 'error' => 'Sesión expirada'];
         }
 
-        // ✅ LOG DETALLADO DEL ERROR
         $errorBody = $response->body();
         Log::error('❌ API Error Response DETAILS', [
             'status' => $response->status(),
             'endpoint' => $endpoint,
             'response_body' => $errorBody,
-            'response_json' => $response->json() // ⬅️ Por si devuelve JSON con error
+            'response_json' => $response->json() 
         ]);
 
-        // Intentar obtener mensaje de error del JSON
         $errorData = $response->json();
         $errorMessage = isset($errorData['message']) ? $errorData['message'] : 
                        (isset($errorData['error']) ? $errorData['error'] : 
@@ -117,7 +114,6 @@ class ApiService
 {
     return $this->makeRequest('put', $endpoint, $data);
 }
-    // En App/Services/ApiService.php, agrega este método:
 public function delete($endpoint)
 {
     $token = session('token');

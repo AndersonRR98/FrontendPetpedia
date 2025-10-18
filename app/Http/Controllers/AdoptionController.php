@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\ApiService;
-use Illuminate\Support\Facades\Log;
 
 class AdoptionController extends Controller
 {
@@ -15,113 +14,76 @@ class AdoptionController extends Controller
         $this->apiService = $apiService;
     }
 
-   public function index()
-{
-    if (!session('token')) {
-        return redirect()->route('login')->with('error', 'Por favor inicia sesión');
+    // Mostrar mascotas disponibles
+    public function index()
+    {
+        if (!session('token')) {
+            return redirect()->route('login')->with('error', 'Por favor inicia sesión');
+        }
+
+        $response = $this->apiService->get('/adoptions');
+        $adopciones = $response ?? [];
+
+        // Solo adopciones pendientes
+        $adopcionesPendientes = array_filter($adopciones, fn($a) => ($a['status'] ?? '') === 'pending');
+        $mascotasAdopcion = $this->extraerMascotasDeAdopciones($adopcionesPendientes);
+
+        return view('adopciones.index', ['mascotas' => $mascotasAdopcion]);
     }
 
-    // Obtener todas las adopciones desde la API
-    $response = $this->apiService->get('/adoptions');
-    
-    if (isset($response['success']) && !$response['success']) {
-        return redirect()->route('dashboard')
-            ->with('error', $response['error'] ?? 'Error al cargar las adopciones');
-    }
-
-    $adopciones = $response ?? [];
-
-    $adopcionesPendientes = array_filter($adopciones, function ($adopcion) {
-        return isset($adopcion['status']) && $adopcion['status'] === 'pending';
-    });
-
-    // Extraer las mascotas de las adopciones pendientes
-    $mascotasAdopcion = $this->extraerMascotasDeAdopciones($adopcionesPendientes);
-    
-    return view('adopciones.index', [
-        'mascotas' => $mascotasAdopcion
-    ]);
-}
-
-
-    /**
-     * Extrae las mascotas de las adopciones EVITANDO DUPLICADOS
-     */
     private function extraerMascotasDeAdopciones($adopciones)
     {
         $mascotas = [];
-        $mascotasIds = []; // Para evitar duplicados
-        
+        $mascotasIds = [];
+
         foreach ($adopciones as $adopcion) {
-            // Verificar si la adopción tiene la mascota incluida
-            if (isset($adopcion['pet']) && $adopcion['pet']) {
+            if (isset($adopcion['pet'])) {
                 $mascota = $adopcion['pet'];
-                $mascotaId = $mascota['id'] ?? null;
-                
-                // Evitar duplicados por ID de mascota
-                if ($mascotaId && !in_array($mascotaId, $mascotasIds)) {
+                $id = $mascota['id'] ?? null;
+                if ($id && !in_array($id, $mascotasIds)) {
                     $mascota['adoption_status'] = $adopcion['status'] ?? 'pending';
                     $mascota['adoption_id'] = $adopcion['id'] ?? null;
-                    $mascota['adoption_comment'] = $adopcion['comment'] ?? null;
-                    
                     $mascotas[] = $mascota;
-                    $mascotasIds[] = $mascotaId;
+                    $mascotasIds[] = $id;
                 }
-            }
-            elseif (isset($adopcion['pet_id'])) {
-                $petId = $adopcion['pet_id'];
-                
-                // Evitar duplicados por ID de mascota
-                if (!in_array($petId, $mascotasIds)) {
+            } elseif (isset($adopcion['pet_id'])) {
+                $id = $adopcion['pet_id'];
+                if (!in_array($id, $mascotasIds)) {
                     $mascotas[] = [
-                        'id' => $petId,
+                        'id' => $id,
                         'adoption_status' => $adopcion['status'] ?? 'pending',
                         'adoption_id' => $adopcion['id'] ?? null,
-                        'adoption_comment' => $adopcion['comment'] ?? null
                     ];
-                    $mascotasIds[] = $petId;
+                    $mascotasIds[] = $id;
                 }
             }
         }
-        
+
         return $mascotas;
     }
 
+    // Guardar solicitud sin validación
     public function store(Request $request)
     {
         if (!session('token')) {
             return redirect()->route('login')->with('error', 'Por favor inicia sesión');
         }
 
-        try {
-            $validated = $request->validate([
-                'pet_id' => 'required|integer',
-                'comment' => 'required|string|max:1000',
-                'name' => 'required|string|max:255',
-                'email' => 'required|email',
-                'phone' => 'required|string|max:20',
-                'address' => 'required|string|max:500',
-                'experience' => 'required|string'
-            ]);
+        // Solo tomamos los datos necesarios para la API
+        $requestData = [
+            'adoption_id' => $request->input('adoption_id'),
+            'user_id' => session('user')['id'] ?? null,
+            'priority' => 'medium',
+            'application_status' => 'accepted',
+            'trainer_id' => null,
+        ];
 
-            $adoptionData = array_merge($validated, [
-                'status' => 'pending'
-            ]);
+        $response = $this->apiService->post('/requestts', $requestData);
+        
+          return redirect()->route('adopciones.index')
+            ->with('success', '¡Solicitud enviada correctamente! Está en revisión.');
 
-            $response = $this->apiService->post('/adoptions', $adoptionData);
-            
-            if (isset($response['success']) && $response['success']) {
-                return redirect()->route('adopciones.index')
-                    ->with('success', '¡Solicitud de adopción enviada con éxito! Está en revisión.');
-            }
-
-            $errorMessage = $response['error'] ?? 'Error al enviar la solicitud';
-            return redirect()->route('adopciones.index')
-                ->with('error', "Error al enviar la solicitud: $errorMessage");
-
-        } catch (\Exception $e) {
-            return redirect()->route('adopciones.index')
-                ->with('error', "Error interno: " . $e->getMessage());
-        }
+        return redirect()->route('adopciones.index')
+            ->with('error', $response['error'] ?? 'Error al enviar la solicitud');
     }
 }

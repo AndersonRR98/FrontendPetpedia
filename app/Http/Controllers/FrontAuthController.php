@@ -12,7 +12,7 @@ class FrontAuthController extends Controller
     public function __construct()
     {
         // URL base del backend (API)
-        $this->api = env('API_URL', 'http://localhost:8001/api');
+        $this->api = env('API_URL', 'http://localhost:8000/api');
     }
 
     // -------------------- LOGIN --------------------
@@ -35,6 +35,8 @@ class FrontAuthController extends Controller
             session([
                 'token' => $data['token'],
                 'user' => $data['user'],
+                'user_id' => $data['user']['id'], 
+
             ]);
 
             // Redirigir al dashboard principal que mostrará los servicios
@@ -62,6 +64,7 @@ class FrontAuthController extends Controller
             session([
                 'token' => $data['token'],
                 'user' => $data['user'],
+                'user_id' => $data['user']['id'], 
             ]);
 
             return redirect('/login')->with('success', 'Registro exitoso, inicia sesión');

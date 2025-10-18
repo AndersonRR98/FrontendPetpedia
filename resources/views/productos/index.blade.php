@@ -12,13 +12,17 @@
                 <p class="text-gray-600">Encuentra los mejores productos para el cuidado de tu mascota</p>
             </div>
             <!-- Botón del carrito -->
-            <a href="#" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition duration-200 font-semibold flex items-center">
-                <i class="fas fa-shopping-cart mr-2"></i>
-                Ver Carrito
+           <a href="{{ route('products.cart') }}" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition duration-200 font-semibold flex items-center">
+            <i class="fas fa-shopping-cart mr-2"></i>
+             Ver Carrito
                 <span class="bg-white text-indigo-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold ml-2" id="cart-count">
-                    {{ count($productos) > 0 ? count($productos) : 0 }}
-                </span>
-            </a>
+             {{ count(session('cart', [])) }}
+            </span>
+             </a>
+             <a href="{{ route('products.myOrders') }}" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200 font-semibold flex items-center ml-4">
+             <i class="fas fa-box mr-2"></i>
+             Mis Pedidos
+             </a>
         </div>
 
         <!-- Mensajes de éxito/error -->
@@ -158,16 +162,19 @@
 
                     <!-- Acciones -->
                     <div class="flex justify-between items-center pt-4 border-t border-gray-100">
-                        <form action="{{ route('products.addToCart') }}" method="POST" class="flex-1 mr-2">
-                            @csrf
-                            <input type="hidden" name="product_id" value="{{ $producto['id'] ?? '' }}">
-                            <input type="hidden" name="quantity" value="1">
-                            <button type="submit" 
-                                    class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-200 text-sm font-semibold flex items-center justify-center">
-                                <i class="fas fa-shopping-cart mr-2"></i>
-                                Agregar al Carrito
-                            </button>
-                        </form>
+                      <form action="{{ route('products.addToCart') }}" method="POST" class="flex-1 mr-2">
+                       @csrf
+                     <input type="hidden" name="product_id" value="{{ $producto['id'] }}">
+                          <input type="hidden" name="name" value="{{ $producto['name'] }}">
+                       <input type="hidden" name="price" value="{{ $producto['price'] }}">
+                        <input type="hidden" name="quantity" value="1">
+                       <button type="submit" 
+                     class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-200 text-sm font-semibold flex items-center justify-center">
+                      <i class="fas fa-shopping-cart mr-2"></i>
+                      Agregar al Carrito
+                         </button>
+                         </form>
+
                         <div class="flex space-x-2">
                             <a href="{{ route('products.show', $producto['id'] ?? '') }}" 
                                class="text-gray-400 hover:text-indigo-500 transition duration-200 p-2"
@@ -327,31 +334,44 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const submitButton = this.querySelector('button[type="submit"]');
             const originalText = submitButton.innerHTML;
-            
-            // Mostrar loading
+            const formData = new FormData(this);
+
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Agregando...';
-            
-            // Simular envío (aquí iría tu lógica real de AJAX)
-            setTimeout(() => {
-                // Mostrar mensaje de éxito
-                showSuccessMessage('Producto agregado al carrito');
-                
-                // Actualizar contador del carrito
-                const cartCount = document.getElementById('cart-count');
-                let currentCount = parseInt(cartCount.textContent) || 0;
-                cartCount.textContent = currentCount + 1;
-                
-                // Restaurar botón
+
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Mostrar mensaje
+                    showSuccessMessage(data.message || 'Producto agregado al carrito');
+
+                    // Actualizar contador
+                    const cartCount = document.getElementById('cart-count');
+                    cartCount.textContent = data.cartCount; // <- Debe venir desde backend
+                } else {
+                    alert(data.message || 'Error al agregar al carrito');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error al agregar al carrito');
+            })
+            .finally(() => {
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalText;
-                
-                // En un caso real, aquí enviarías el formulario
-                // this.submit();
-            }, 1000);
+            });
         });
     });
 });
+
 
 // Función para mostrar mensaje de éxito
 function showSuccessMessage(message) {

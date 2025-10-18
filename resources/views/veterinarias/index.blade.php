@@ -168,10 +168,7 @@
             <p class="text-gray-500">Intenta ajustar los filtros de búsqueda.</p>
         </div>
 
-        <!-- Información sobre las imágenes -->
-        <div class="mt-8 text-center text-sm text-gray-500">
-            <p>💡 <strong>Nota:</strong> Las imágenes mostradas son de referencia local</p>
-        </div>
+      
     </div>
 </div>
 

@@ -3,80 +3,128 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\ApiService;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class ProductController extends Controller
 {
-    protected $apiService;
-
-    public function __construct(ApiService $apiService)
-    {
-        $this->apiService = $apiService;
-    }
-
+    // Listar productos
     public function index()
     {
-        // Verificar si el usuario está autenticado
-        if (!session('token')) {
-            return redirect()->route('login')->with('error', 'Por favor inicia sesión');
-        }
-
-        Log::info('Accediendo a productos.index');
-
-        // Consumir el endpoint de productos de tu API
-        $response = $this->apiService->get('/products');
-        
-        Log::info('Respuesta de la API productos:', ['response' => $response]);
-
-        // Si hay error, mostramos productos vacíos pero no redirigimos
-        if (isset($response['success']) && !$response['success']) {
-            Log::error('Error en API productos:', ['error' => $response['error']]);
-            $productos = [];
-        } else {
-            // Tu API retorna un array de productos
-            $productos = is_array($response) ? $response : [];
-        }
-        
-        Log::info('Productos a mostrar:', ['count' => count($productos)]);
+        $response = Http::get(env('API_URL') . '/products');
+        $productos = $response->successful() ? $response->json() : [];
 
         return view('productos.index', compact('productos'));
     }
 
+    // Mostrar detalle de producto
     public function show($id)
     {
-        if (!session('token')) {
-            return redirect()->route('login')->with('error', 'Por favor inicia sesión');
-        }
+        $response = Http::get(env('API_URL') . "/products/{$id}");
+        $producto = $response->successful() ? $response->json() : [];
 
-        $response = $this->apiService->get('/products/' . $id);
-        
-        if (isset($response['success']) && !$response['success']) {
-            return redirect()->route('products.index')
-                ->with('error', $response['error'] ?? 'Error al cargar el producto');
-        }
-
-        $producto = $response ?? [];
-        
         return view('productos.show', compact('producto'));
     }
 
+    // Agregar al carrito
     public function addToCart(Request $request)
     {
-        if (!session('token')) {
-            return redirect()->route('login')->with('error', 'Por favor inicia sesión');
-        }
-
         $validated = $request->validate([
             'product_id' => 'required|integer',
-            'quantity' => 'required|integer|min:1'
+            'name'       => 'required|string',
+            'price'      => 'required|numeric',
+            'quantity'   => 'required|integer|min:1'
         ]);
 
-        // Aquí puedes implementar la lógica local del carrito
-        // Por ahora solo mostramos un mensaje de éxito
-        Log::info('Producto agregado al carrito local:', $validated);
+        $cart = session()->get('cart', []);
 
-        return redirect()->route('products.index')
-            ->with('success', 'Producto agregado al carrito correctamente');
+        if (isset($cart[$validated['product_id']])) {
+            $cart[$validated['product_id']]['quantity'] += $validated['quantity'];
+        } else {
+            $cart[$validated['product_id']] = [
+                'id'       => $validated['product_id'],
+                'name'     => $validated['name'],
+                'price'    => $validated['price'],
+                'quantity' => $validated['quantity']
+            ];
+        }
+
+        session()->put('cart', $cart);
+
+        return redirect()->route('products.cart')->with('success', 'Producto agregado al carrito');
     }
+
+    public function cart()
+    {
+        $cart = session('cart', []);
+        $total = array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $cart));
+
+        return view('productos.cart', compact('cart', 'total'));
+    }
+
+    public function storeCart(Request $request)
+{
+    try {
+        $user = session('user');
+        $cart = session('cart', []);
+
+        if (!$user) {
+            return back()->with('error', 'Debes iniciar sesión para hacer el pedido.');
+        }
+
+        if (empty($cart)) {
+            return back()->with('error', 'Tu carrito está vacío.');
+        }
+
+        // Mapeamos los productos del carrito al formato que espera el backend
+        $items = array_map(fn($item) => [
+            'product_id' => (int) $item['id'],
+            'quantity'   => (int) ($item['quantity'] ?? 1),
+            'price'      => (float) ($item['price'] ?? 0),
+        ], $cart);
+
+        // Calcular el total
+        $totalAmount = array_reduce($items, fn($sum, $item) => $sum + ($item['price'] * $item['quantity']), 0);
+
+        // Enviar pedido al backend
+        $response = Http::withToken(session('token'))->post(env('API_URL') . '/orders', [
+            'user_id'      => $user['id'],
+            'total_amount' => $totalAmount,
+            'order_date'   => now()->toDateTimeString(),
+            'status' => 'pending',
+            'items'        => $items
+        ]);
+
+        if ($response->failed()) {
+            // Mostramos el error exacto que responde el backend (útil para depuración)
+            $error = $response->json()['error'] ?? 'Error desconocido';
+            return back()->with('error', "Error al guardar el pedido: $error");
+        }
+
+        // Limpiar carrito después de guardar el pedido
+        session()->forget('cart');
+
+        return redirect()->route('products.myOrders')->with('success', 'Pedido realizado correctamente');
+
+    } catch (\Exception $e) {
+        return back()->with('error', 'Error al procesar el pedido: ' . $e->getMessage());
+    }
+}
+
+
+    // Ver pedidos del usuario
+ public function myOrders()
+{
+    $user = session('user');
+    if (!$user) {
+        return redirect()->route('login')->with('error', 'Debes iniciar sesión');
+    }
+
+    $response = Http::withToken(session('token'))
+                    ->get(env('API_URL') . "/orders/user/{$user['id']}");
+
+    $orders = $response->successful() ? $response->json() : [];
+
+    return view('productos.orders', compact('orders'));
+}
+
 }

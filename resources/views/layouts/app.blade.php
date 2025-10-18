@@ -181,14 +181,10 @@
                             </div>
                         </div>
                         
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" 
-                                    class="w-full flex items-center text-red-600 hover:text-red-700 p-3 rounded-lg hover:bg-red-50 transition duration-200">
-                                <i class="fas fa-sign-out-alt mr-3"></i>
-                                Cerrar Sesión
-                            </button>
-                        </form>
+                       <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                      <button type="submit">Cerrar sesión</button>
+                       </form>
                     </div>
                 </div>
             </div>
