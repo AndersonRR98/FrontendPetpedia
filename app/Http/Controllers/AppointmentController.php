@@ -75,7 +75,9 @@ class AppointmentController extends Controller
         Log::info('📥 Respuesta API:', [$response]);
 
         if (isset($response['id'])) {
-            return redirect()->back()->with('success', 'Cita con la veterinaria Solicitada su estado actual es pendiente de confirmar ');
+            // ✅ CORRECCIÓN: Redirigir a la misma página de veterinaria con mensaje de éxito
+            return redirect()->route('veterinarias.show', ['id' => $request->veterinary_id])
+                ->with('success', '✅ Cita solicitada exitosamente. Estado actual: Pendiente de confirmación');
         }
 
         $errorMessage = $response['error'] ?? 'Error desconocido al agendar la cita';
@@ -132,8 +134,9 @@ public function storeTrainer(Request $request)
         Log::info('📥 Respuesta API (Trainer):', [$response]);
 
         if (isset($response['id']) && isset($response['trainer_id'])) {
-            return redirect()->back()
-                ->with('success', 'Cita con el entrenador Solicitada su estado actual es pendiente de confirmar.');
+            // ✅ CORRECCIÓN: Redirigir a la página del entrenador con mensaje de éxito
+            return redirect()->route('entrenadores.show', ['id' => $request->trainer_id])
+                ->with('success', '✅ Cita con el entrenador solicitada exitosamente. Estado actual: Pendiente de confirmación.');
         }
 
         $errorMessage = $response['error'] ?? $response['message'] ?? 'Error al agendar la cita con el entrenador';
@@ -150,7 +153,6 @@ public function storeTrainer(Request $request)
             ->withInput();
     }
 }
-
 
    
 }

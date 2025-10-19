@@ -11,7 +11,7 @@ Route::get('/', function () {
     return view('home');
 });
 
-// Login y registro
+// Login y registro (solo para invitados)
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', [FrontAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [FrontAuthController::class, 'login']);
@@ -19,20 +19,19 @@ Route::middleware(['guest'])->group(function () {
     Route::post('/register', [FrontAuthController::class, 'register']);
 });
 
-// Logout
+// Logout (accesible para usuarios autenticados)
 Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
 
-
-Route::view('/cliente/dashboard', 'roles.cliente');
-Route::view('/veterinario/dashboard', 'roles.veterinario');
-Route::view('/entrenador/dashboard', 'roles.entrenador');
-Route::view('/refugio/dashboard', 'roles.refugio');
-
-
+// Rutas protegidas - requieren autenticación
 Route::middleware([CheckApiSession::class])->group(function () {
 
-    // Dashboard principal
+    // Dashboard para clientes (rol 1)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Dashboard especializado solo para veterinarias (rol 2)
+     Route::get('/veterinary/dashboard', function () {
+    return view('userveterinaria.deshboard');
+     })->name('veterinary.dashboard');
 
     // Servicios
     Route::prefix('veterinarias')->group(function () {
@@ -70,11 +69,18 @@ Route::middleware([CheckApiSession::class])->group(function () {
     Route::post('/carrito/guardar', [ProductController::class, 'storeCart'])->name('products.storeCart');
 
     // Pedidos
-       Route::get('/pedidos', [ProductController::class, 'myOrders'])->name('products.myOrders');
+    Route::get('/pedidos', [ProductController::class, 'myOrders'])->name('products.myOrders');
 
     // Perfil
     Route::prefix('perfil')->group(function () {
         Route::get('/', [ProfileController::class, 'show'])->name('profile.show');
         Route::put('/actualizar', [ProfileController::class, 'update'])->name('profile.update');
     });
+
+    // Foro
+    Route::get('/foros', [ForumController::class, 'index'])->name('foros.index');
+    Route::post('/foros', [ForumController::class, 'store'])->name('foros.store');
+    Route::post('/foros/{id}/like', [ForumController::class, 'like'])->name('foros.like');
+    Route::post('/foros/{id}/comment', [ForumController::class, 'comment'])->name('foros.comment');
+    Route::delete('/foros/{id}', [ForumController::class, 'destroy'])->name('foros.destroy');
 });

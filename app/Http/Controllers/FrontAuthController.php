@@ -3,16 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Services\ApiService;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FrontAuthController extends Controller
 {
-    private $api;
+    protected $apiService;
 
-    public function __construct()
+    public function __construct(ApiService $apiService)
     {
-        // URL base del backend (API)
-        $this->api = env('API_URL', 'http://localhost:8000/api');
+        $this->apiService = $apiService;
     }
 
     // -------------------- LOGIN --------------------
@@ -23,67 +24,261 @@ class FrontAuthController extends Controller
 
     public function login(Request $request)
     {
-        $response = Http::post("{$this->api}/auth/login", [
-            'email' => $request->email,
-            'password' => $request->password,
-        ]);
-
-        if ($response->successful()) {
-            $data = $response->json();
-            
-            // Guardar token y usuario en sesión
-            session([
-                'token' => $data['token'],
-                'user' => $data['user'],
-                'user_id' => $data['user']['id'], 
-
+        try {
+            // Validar en frontend antes de enviar
+            $validated = $request->validate([
+                'email' => 'required|email',
+                'password' => 'required|string|min:8',
             ]);
 
-            // Redirigir al dashboard principal que mostrará los servicios
-            return redirect()->route('dashboard');
-        }
+            Log::info('Login - Iniciando proceso', ['email' => $request->email]);
 
-        // Si llega aquí, las credenciales no fueron válidas
-        return back()->withErrors(['login' => 'Credenciales inválidas']);
+            $response = $this->apiService->post('/auth/login', [
+                'email' => $request->email,
+                'password' => $request->password,
+            ]);
+
+            Log::info('Login - Respuesta API', [
+                'success' => $response['success'] ?? false,
+                'has_token' => isset($response['token']),
+                'has_user' => isset($response['user']),
+                'role_id' => $response['user']['role_id'] ?? null
+            ]);
+
+            if (isset($response['success']) && $response['success']) {
+                // Guardar token y usuario en sesión
+                session([
+                    'token' => $response['token'],
+                    'user' => $response['user'],
+                    'user_id' => $response['user']['id'],
+                ]);
+
+                Log::info('Login - Éxito', [
+                    'user_id' => $response['user']['id'],
+                    'role' => $response['user']['role_id'] ?? 'N/A'
+                ]);
+
+                // ⭐⭐ REDIRIGIR SEGÚN EL ROL ⭐⭐
+                $roleId = $response['user']['role_id'];
+                
+                if ($roleId == 2) { 
+                    // Veterinarias van al dashboard especializado
+                    return redirect()->route('veterinary.dashboard')->with('success', '¡Bienvenida Veterinaria!');
+                } else {
+                    // Todos los demás roles van al dashboard general
+                    return redirect()->route('dashboard')->with('success', '¡Bienvenido de nuevo!');
+                }
+            }
+
+            // Manejar errores de la API
+            $errorMessage = $response['error'] ?? $response['message'] ?? 'Credenciales inválidas';
+            
+            Log::warning('Login - Error', ['error' => $errorMessage]);
+
+            return back()->withErrors(['login' => $errorMessage])->withInput();
+
+        } catch (\Exception $e) {
+            Log::error('Login - Excepción', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors(['login' => 'Error de conexión: ' . $e->getMessage()])->withInput();
+        }
     }
 
     // -------------------- REGISTER --------------------
     public function showRegister()
     {
-        // Obtener roles desde la API
-        $roles = Http::get("{$this->api}/auth/roles")->json();
-        return view('auth.register', compact('roles'));
+        try {
+            // Obtener roles desde la API usando ApiService
+            $response = $this->apiService->get('/auth/roles');
+            
+            Log::info('Register - Obteniendo roles', [
+                'success' => $response['success'] ?? false,
+                'roles_count' => is_array($response) ? count($response) : 0
+            ]);
+
+            $roles = [];
+            
+            if (isset($response['success']) && $response['success']) {
+                $roles = $response;
+            } elseif (is_array($response) && !isset($response['success'])) {
+                // Si la respuesta es directamente el array de roles
+                $roles = $response;
+            } else {
+                Log::error('Register - Error obteniendo roles', ['response' => $response]);
+                // Usar roles por defecto si falla la API
+                $roles = [
+                    ['id' => 1, 'name' => 'Cliente'],
+                    ['id' => 2, 'name' => 'Veterinaria'],
+                    ['id' => 3, 'name' => 'Entrenador'],
+                    ['id' => 4, 'name' => 'Refugio'],
+                ];
+            }
+
+            return view('auth.register', compact('roles'));
+
+        } catch (\Exception $e) {
+            Log::error('Register - Error cargando vista', [
+                'message' => $e->getMessage()
+            ]);
+
+            // Roles por defecto en caso de error
+            $roles = [
+                ['id' => 1, 'name' => 'Cliente'],
+                ['id' => 2, 'name' => 'Veterinaria'],
+                ['id' => 3, 'name' => 'Entrenador'],
+                ['id' => 4, 'name' => 'Refugio'],
+            ];
+
+            return view('auth.register', compact('roles'));
+        }
     }
 
     public function register(Request $request)
     {
-        $response = Http::post("{$this->api}/auth/register", $request->all());
-
-        if ($response->successful()) {
-            $data = $response->json();
-            session([
-                'token' => $data['token'],
-                'user' => $data['user'],
-                'user_id' => $data['user']['id'], 
+        try {
+            // Validación básica en frontend
+            $validated = $request->validate([
+                'name' => 'required|string|min:2|max:255',
+                'email' => 'required|email',
+                'password' => 'required|string|min:8|confirmed',
+                'role_id' => 'required|in:1,2,3,4',
+                'phone' => 'required|string|max:20',
+                'address' => 'required|string',
+                'biography' => 'nullable|string',
             ]);
 
-            return redirect('/login')->with('success', 'Registro exitoso, inicia sesión');
-        }
+            Log::info('Register - Iniciando registro', [
+                'email' => $request->email,
+                'role_id' => $request->role_id,
+                'has_vet_fields' => $request->has('clinic_name')
+            ]);
 
-        return back()->withErrors([
-            'register' => $response->json()['message'] ?? 'Error en el registro.',
-            'errors' => $response->json()['errors'] ?? []
-        ])->withInput();
+            // Preparar datos para la API
+            $registerData = $request->only([
+                'name', 'email', 'password', 'password_confirmation', 
+                'role_id', 'phone', 'address', 'biography'
+            ]);
+
+            // Si es veterinaria, agregar campos específicos
+            if ($request->role_id == 2) {
+                $vetFields = $request->only([
+                    'clinic_name', 'veterinary_license', 'specialization'
+                ]);
+                
+                // Validar campos de veterinaria
+                $request->validate([
+                    'clinic_name' => 'required|string|max:255',
+                    'veterinary_license' => 'required|string|max:100',
+                    'specialization' => 'required|string|max:255',
+                ]);
+
+                $registerData = array_merge($registerData, $vetFields);
+                
+                Log::info('Register - Campos veterinaria incluidos', $vetFields);
+            }
+
+            $response = $this->apiService->post('/auth/register', $registerData);
+
+            Log::info('Register - Respuesta API', [
+                'success' => $response['success'] ?? false,
+                'has_token' => isset($response['token']),
+                'has_user' => isset($response['user'])
+            ]);
+
+            if (isset($response['success']) && $response['success']) {
+                
+                Log::info('Register - Éxito, redirigiendo al login', [
+                    'user_id' => $response['user']['id'],
+                    'role' => $response['user']['role_id']
+                ]);
+
+                // Redirigir al login con mensaje de éxito
+                return redirect('/login')->with('success', '¡Registro exitoso! Por favor inicia sesión con tus credenciales.');
+            }
+
+            // Manejar errores de la API
+            $errorData = $response;
+            $errorMessage = $errorData['error'] ?? $errorData['message'] ?? 'Error en el registro';
+            $errors = $errorData['errors'] ?? [];
+
+            Log::error('Register - Error del backend', [
+                'message' => $errorMessage,
+                'errors' => $errors
+            ]);
+
+            return back()->withErrors([
+                'register' => $errorMessage,
+                'errors' => $errors
+            ])->withInput();
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Capturar errores de validación de Laravel
+            Log::warning('Register - Validación fallida', [
+                'errors' => $e->errors()
+            ]);
+            
+            return back()->withErrors($e->errors())->withInput();
+
+        } catch (\Exception $e) {
+            Log::error('Register - Excepción', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors([
+                'register' => 'Error de conexión: ' . $e->getMessage()
+            ])->withInput();
+        }
     }
 
     // -------------------- LOGOUT --------------------
     public function logout()
     {
-        if (session('token')) {
-            Http::withToken(session('token'))->post("{$this->api}/auth/logout");
-        }
+        try {
+            $token = session('token');
+            
+            if ($token) {
+                Log::info('Logout - Cerrando sesión en API');
+                
+                $response = $this->apiService->post('/auth/logout', []);
+                
+                Log::info('Logout - Respuesta API', [
+                    'success' => $response['success'] ?? false
+                ]);
+            }
 
-        session()->flush();
-        return redirect('/login');
+            // Limpiar sesión localmente
+            session()->flush();
+
+            Log::info('Logout - Sesión limpiada localmente');
+
+            return redirect('/login')->with('success', 'Sesión cerrada correctamente.');
+
+        } catch (\Exception $e) {
+            Log::error('Logout - Excepción', [
+                'message' => $e->getMessage()
+            ]);
+
+            // Limpiar sesión incluso si hay error
+            session()->flush();
+            
+            return redirect('/login')->with('info', 'Sesión cerrada.');
+        }
+    }
+
+    // -------------------- VERIFICAR SESIÓN --------------------
+    public function checkSession()
+    {
+        $user = session('user');
+        $token = session('token');
+
+        return response()->json([
+            'authenticated' => !empty($user) && !empty($token),
+            'user' => $user,
+            'has_token' => !empty($token)
+        ]);
     }
 }
