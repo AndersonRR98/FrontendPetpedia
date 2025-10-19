@@ -10,7 +10,6 @@
   </div>
 
   <div class="w-full max-w-2xl bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 relative z-10 border border-white/20">
-    <!-- Logo Mejorado -->
     <div class="flex justify-center mb-8">
       <div class="flex items-center group">
         <img src="{{ asset('images/logo petpedia.png') }}" alt="PetPedia Logo" class="h-12 w-auto group-hover:scale-110 transition-transform duration-300">
@@ -40,7 +39,7 @@
           <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <i class="fas fa-user-tag text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-200"></i>
           </div>
-          <select name="role_id" id="role_id" class="w-full border border-gray-300 rounded-2xl px-12 py-4 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all duration-200 text-lg bg-white/50 backdrop-blur-sm appearance-none" required onchange="toggleVeterinaryFields()">
+          <select name="role_id" id="role_id" class="w-full border border-gray-300 rounded-2xl px-12 py-4 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all duration-200 text-lg bg-white/50 backdrop-blur-sm appearance-none" required onchange="toggleRoleFields()">
             <option value="">Selecciona tu rol...</option>
             @foreach($roles as $role)
               <option value="{{ $role['id'] }}" {{ old('role_id') == $role['id'] ? 'selected' : '' }}>{{ $role['name'] }}</option>
@@ -196,6 +195,138 @@
         </div>
       </div>
 
+      <!-- CAMPOS ESPECÍFICOS PARA ENTRENADOR -->
+      <div id="trainerFields" class="hidden md:col-span-2 space-y-6 border-t border-gray-200 pt-6 mt-4">
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">Información de Entrenador</h3>
+        
+        <!-- Especialidad -->
+        <div class="group">
+          <label class="block mb-3 font-bold text-gray-700 text-lg">Especialidad</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i class="fas fa-dumbbell text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-200"></i>
+            </div>
+            <input 
+              type="text" 
+              name="specialty" 
+              value="{{ old('specialty') }}" 
+              class="w-full border border-gray-300 rounded-2xl px-12 py-4 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all duration-200 text-lg bg-white/50 backdrop-blur-sm" 
+              placeholder="Tu especialidad en entrenamiento"
+            >
+          </div>
+        </div>
+
+        <!-- Años de Experiencia -->
+        <div class="group">
+          <label class="block mb-3 font-bold text-gray-700 text-lg">Años de Experiencia</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i class="fas fa-calendar-alt text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-200"></i>
+            </div>
+            <input 
+              type="number" 
+              name="experience_years" 
+              value="{{ old('experience_years') }}" 
+              class="w-full border border-gray-300 rounded-2xl px-12 py-4 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all duration-200 text-lg bg-white/50 backdrop-blur-sm" 
+              placeholder="Años de experiencia"
+              min="0"
+            >
+          </div>
+        </div>
+
+        <!-- Calificaciones -->
+        <div class="group">
+          <label class="block mb-3 font-bold text-gray-700 text-lg">Calificaciones</label>
+          <div class="relative">
+            <div class="absolute top-4 left-4 pointer-events-none">
+              <i class="fas fa-graduation-cap text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-200"></i>
+            </div>
+            <textarea 
+              name="qualifications" 
+              rows="3" 
+              class="w-full border border-gray-300 rounded-2xl px-12 py-4 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all duration-200 text-lg bg-white/50 backdrop-blur-sm resize-none" 
+              placeholder="Tus certificaciones y calificaciones..."
+            >{{ old('qualifications') }}</textarea>
+          </div>
+        </div>
+
+        <!-- Tarifa por Hora -->
+        <div class="group">
+          <label class="block mb-3 font-bold text-gray-700 text-lg">Tarifa por Hora (S/)</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i class="fas fa-money-bill-wave text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-200"></i>
+            </div>
+            <input 
+              type="number" 
+              name="hourly_rate" 
+              value="{{ old('hourly_rate') }}" 
+              class="w-full border border-gray-300 rounded-2xl px-12 py-4 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all duration-200 text-lg bg-white/50 backdrop-blur-sm" 
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- CAMPOS ESPECÍFICOS PARA REFUGIO -->
+      <div id="shelterFields" class="hidden md:col-span-2 space-y-6 border-t border-gray-200 pt-6 mt-4">
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">Información de Refugio</h3>
+        
+        <!-- Nombre del Refugio -->
+        <div class="group">
+          <label class="block mb-3 font-bold text-gray-700 text-lg">Nombre del Refugio</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i class="fas fa-home text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-200"></i>
+            </div>
+            <input 
+              type="text" 
+              name="shelter_name" 
+              value="{{ old('shelter_name') }}" 
+              class="w-full border border-gray-300 rounded-2xl px-12 py-4 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all duration-200 text-lg bg-white/50 backdrop-blur-sm" 
+              placeholder="Nombre de tu refugio"
+            >
+          </div>
+        </div>
+
+        <!-- Persona Responsable -->
+        <div class="group">
+          <label class="block mb-3 font-bold text-gray-700 text-lg">Persona Responsable</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i class="fas fa-user-check text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-200"></i>
+            </div>
+            <input 
+              type="text" 
+              name="responsible_person" 
+              value="{{ old('responsible_person') }}" 
+              class="w-full border border-gray-300 rounded-2xl px-12 py-4 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all duration-200 text-lg bg-white/50 backdrop-blur-sm" 
+              placeholder="Nombre del responsable"
+            >
+          </div>
+        </div>
+
+        <!-- Capacidad -->
+        <div class="group">
+          <label class="block mb-3 font-bold text-gray-700 text-lg">Capacidad de Mascotas</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i class="fas fa-paw text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-200"></i>
+            </div>
+            <input 
+              type="number" 
+              name="capacity" 
+              value="{{ old('capacity') }}" 
+              class="w-full border border-gray-300 rounded-2xl px-12 py-4 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all duration-200 text-lg bg-white/50 backdrop-blur-sm" 
+              placeholder="Número máximo de mascotas"
+              min="1"
+            >
+          </div>
+        </div>
+      </div>
+
       <!-- Contraseña -->
       <div class="group">
         <label class="block mb-3 font-bold text-gray-700 text-lg">Contraseña</label>
@@ -308,31 +439,49 @@
       }, 400 + (index * 100));
     });
 
-    // Mostrar campos de veterinaria si el rol seleccionado es 2
-    toggleVeterinaryFields();
+    // Mostrar campos según el rol seleccionado
+    toggleRoleFields();
   });
 
-  function toggleVeterinaryFields() {
+  function toggleRoleFields() {
     const roleSelect = document.getElementById('role_id');
     const veterinaryFields = document.getElementById('veterinaryFields');
+    const trainerFields = document.getElementById('trainerFields');
+    const shelterFields = document.getElementById('shelterFields');
     
-    if (roleSelect.value === '2') {
-      veterinaryFields.classList.remove('hidden');
-      
-      // Hacer requeridos los campos de veterinaria
-      const vetInputs = veterinaryFields.querySelectorAll('input');
-      vetInputs.forEach(input => {
-        input.required = true;
-      });
-    } else {
-      veterinaryFields.classList.add('hidden');
-      
-      // Quitar requerido de los campos de veterinaria
-      const vetInputs = veterinaryFields.querySelectorAll('input');
-      vetInputs.forEach(input => {
-        input.required = false;
-      });
+    // Ocultar todos los campos específicos primero
+    veterinaryFields.classList.add('hidden');
+    trainerFields.classList.add('hidden');
+    shelterFields.classList.add('hidden');
+    
+    // Quitar requerido de todos los campos específicos
+    const specificInputs = document.querySelectorAll('#veterinaryFields input, #trainerFields input, #shelterFields input, #veterinaryFields textarea, #trainerFields textarea, #shelterFields textarea');
+    specificInputs.forEach(input => {
+      input.required = false;
+    });
+
+    // Mostrar campos según el rol seleccionado
+    switch(roleSelect.value) {
+      case '2': // Veterinaria
+        veterinaryFields.classList.remove('hidden');
+        setFieldsRequired(veterinaryFields);
+        break;
+      case '3': // Entrenador
+        trainerFields.classList.remove('hidden');
+        setFieldsRequired(trainerFields);
+        break;
+      case '4': // Refugio
+        shelterFields.classList.remove('hidden');
+        setFieldsRequired(shelterFields);
+        break;
     }
+  }
+
+  function setFieldsRequired(container) {
+    const inputs = container.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+      input.required = true;
+    });
   }
 </script>
 @endsection

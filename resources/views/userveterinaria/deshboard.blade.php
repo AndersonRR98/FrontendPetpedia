@@ -111,7 +111,7 @@
             <div class="flex justify-between items-center py-3">
                 <!-- Logo Mejorado -->
                 <div class="flex items-center">
-                    <a href="{{ route('veterinary.dashboard') }}" class="flex items-center group">
+                    <a href="{{ route('veterinary.deshboard') }}" class="flex items-center group">
                         <div class="relative">
                             <img src="{{ asset('images/logo petpedia.png') }}" alt="PetPedia Logo" class="h-10 w-auto transform group-hover:scale-110 transition-transform duration-300">
                             <div class="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
@@ -124,7 +124,7 @@
 
                 <!-- Navigation Links - Desktop Mejorado -->
                 <div class="hidden lg:flex items-center space-x-1">
-                    <a href="{{ route('veterinary.dashboard') }}" 
+                    <a href="{{ route('veterinary.deshboard') }}" 
                        class="relative px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 group text-white gradient-bg shadow-lg">
                         <i class="fas fa-home mr-2"></i>
                         Dashboard
@@ -194,7 +194,7 @@
                  class="lg:hidden bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 mt-3 p-6">
                 <div class="space-y-4">
                     <!-- Dashboard Mobile -->
-                    <a href="{{ route('veterinary.dashboard') }}" 
+                    <a href="{{ route('veterinary.deshboard') }}" 
                        class="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100 text-purple-600 font-semibold">
                         <div class="flex items-center">
                             <i class="fas fa-home text-purple-500 mr-3 text-lg"></i>
@@ -275,7 +275,7 @@
                         <i class="fas fa-user-md text-white text-3xl"></i>
                     </div>
                     <h1 class="text-5xl md:text-7xl font-black mb-6 bg-gradient-to-r from-white to-green-100 bg-clip-text text-transparent leading-tight">
-                        ¡Bienvenida, Dra. {{ session('user')['name'] }}!
+                        ¡Bienvenido, Dr. {{ session('user')['name'] }}!
                     </h1>
                     <p class="text-xl md:text-2xl text-green-100 mb-8 max-w-3xl mx-auto leading-relaxed font-medium">
                         Panel de control especializado para la gestión de tu consulta veterinaria

@@ -29,9 +29,18 @@ Route::middleware([CheckApiSession::class])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Dashboard especializado solo para veterinarias (rol 2)
-     Route::get('/veterinary/dashboard', function () {
+     Route::get('/veterinary/deshboard', function () {
     return view('userveterinaria.deshboard');
-     })->name('veterinary.dashboard');
+     })->name('veterinary.deshboard');
+
+     Route::get('/trainer/deshboard', function () {
+    return view('userentrenador.deshboard'); 
+     })->name('trainer.deshboard');
+
+    Route::get('/shelter/deshboard', function () {
+    return view('userrefugio.deshboard'); 
+     })->name('shelter.deshboard');
+
 
     // Servicios
     Route::prefix('veterinarias')->group(function () {

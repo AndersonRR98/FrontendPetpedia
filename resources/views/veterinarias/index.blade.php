@@ -113,30 +113,40 @@
                             <span class="font-semibold">Lic. {{ $veterinaria['veterinary_license'] ?? 'En trámite' }}</span>
                         </div>
                         
-                        @if($veterinaria['schedules'])
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-3 mt-0.5">
-                                <i class="fas fa-clock text-yellow-500 text-sm"></i>
-                            </div>
-                            <span class="font-medium">
-                                @php
-                                    // CORRECCIÓN: Usar días en español como en la base de datos
-                                    $schedules = is_string($veterinaria['schedules']) ? json_decode($veterinaria['schedules'], true) : $veterinaria['schedules'];
-                                    $diasSemana = [
-                                        'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'
-                                    ];
-                                    $hoy = $diasSemana[date('N') - 1]; // date('N') devuelve 1(lunes) a 7(domingo)
-                                    $horarioHoy = $schedules[$hoy] ?? 'Cerrado';
-                                @endphp
-                                <span class="text-gray-900">Hoy:</span> 
-                                @if($horarioHoy !== 'Cerrado' && $horarioHoy !== '')
-                                    <span class="text-green-600 font-semibold">{{ $horarioHoy }}</span>
-                                @else
-                                    <span class="text-red-500 font-semibold">Cerrado</span>
-                                @endif
-                            </span>
-                        </div>
-                        @endif
+@if($veterinaria['schedules'])
+<div class="flex items-start">
+    <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-3 mt-0.5">
+        <i class="fas fa-clock text-yellow-500 text-sm"></i>
+    </div>
+    <span class="font-medium">
+        @php
+            // CORRECCIÓN: Usar días en español como en la base de datos
+            $schedules = is_string($veterinaria['schedules']) ? json_decode($veterinaria['schedules'], true) : $veterinaria['schedules'];
+            $diasSemana = [
+                'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'
+            ];
+            $hoy = $diasSemana[date('N') - 1]; // date('N') devuelve 1(lunes) a 7(domingo)
+            $horarioHoy = $schedules[$hoy] ?? 'Cerrado';
+            
+            // CORRECCIÓN: Convertir array a string si es necesario
+            if (is_array($horarioHoy)) {
+                // Si es un array con horario de apertura y cierre
+                if (count($horarioHoy) >= 2) {
+                    $horarioHoy = $horarioHoy[0] . ' - ' . $horarioHoy[1];
+                } else {
+                    $horarioHoy = implode(' - ', $horarioHoy);
+                }
+            }
+        @endphp
+        <span class="text-gray-900">Hoy:</span> 
+        @if($horarioHoy !== 'Cerrado' && $horarioHoy !== '')
+            <span class="text-green-600 font-semibold">{{ $horarioHoy }}</span>
+        @else
+            <span class="text-red-500 font-semibold">Cerrado</span>
+        @endif
+    </span>
+</div>
+@endif
                         
                         @if(isset($veterinaria['user']['profile']['address']))
                         <div class="flex items-center">
