@@ -1,5 +1,4 @@
-@extends('layouts.app')
-
+@extends('layouts.app') <!-- vista de las adopciones disponibles-->
 @section('title', 'Adopciones - PetPedia')
 
 @section('content')

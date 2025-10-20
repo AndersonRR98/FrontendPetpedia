@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app')  <!-- vista principal de los productos -->
 
 @section('title', 'Productos - PetPedia')
 

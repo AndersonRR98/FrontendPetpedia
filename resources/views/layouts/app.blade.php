@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> <!-- vista de layaout principal-->
 <html lang="es">
 <head>
     <meta charset="UTF-8">

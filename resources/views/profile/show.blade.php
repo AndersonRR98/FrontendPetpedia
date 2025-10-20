@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app')   <!-- vista del perfil de los usuarios cliente-->
 
 @section('title', 'Mi Perfil - PetPedia')
 

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app')   <!-- vista detalles de los productos -->
 
 @section('title', ($producto['name'] ?? 'Producto') . ' - PetPedia')
 

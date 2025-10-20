@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app')  <!-- vista de entrenadores disponibles -->
 
 @section('title', 'Entrenadores - PetPedia')
 

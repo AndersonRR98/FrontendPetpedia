@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app')  <!-- vista las ordenes pedidos -->
 
 @section('title', 'Mis Pedidos - PetPedia')
 

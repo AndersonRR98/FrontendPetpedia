@@ -1,10 +1,9 @@
-@extends('layouts.app')
+@extends('layouts.app') <!-- vista interfaz que mira el usuario de las veterinarias -->
 
 @section('title', 'Veterinarias - PetPedia')
 
 @section('content')
 @php
-    // CORRECCIÓN: Función mejorada para verificar si está abierto AHORA MISMO
     function estaAbiertaAhora($horario) {
         if (!$horario || $horario === '' || strtolower($horario) === 'cerrado') {
             return false;
@@ -70,10 +69,19 @@
                 Encuentra la mejor atención médica para tu compañero de cuatro patas
             </p>
             <!-- Mostrar hora actual -->
-            <div class="mt-4 inline-flex items-center bg-white/80 backdrop-blur-lg rounded-2xl px-4 py-2 shadow-lg border border-white/60">
-                <i class="fas fa-clock text-purple-500 mr-2"></i>
-                <span class="text-gray-700 font-semibold">Hora actual: {{ date('H:i') }}</span>
-            </div>
+     <!-- 🔥 NUEVO: Botón de Mis Citas -->
+    <div class="mt-6 flex justify-center">
+        <a href="{{ route('citas.index') }}" 
+           class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-xl font-bold flex items-center text-lg group">
+            <i class="fas fa-calendar-alt mr-3 group-hover:animate-pulse"></i> 
+            Ver Mis Citas
+            @if(count($appointments ?? []) > 0)
+                <span class="ml-3 bg-white text-green-600 px-2 py-1 rounded-full text-sm font-bold min-w-6">
+                    {{ count($appointments) }}
+                </span>
+            @endif
+        </a>
+    </div>
         </div>
 
         <!-- Buscador y Filtros Mejorados -->

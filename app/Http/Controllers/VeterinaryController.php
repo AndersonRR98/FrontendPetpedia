@@ -15,29 +15,34 @@ class VeterinaryController extends Controller
     }
 
     public function index()
-{
-    if (!session('token')) {
-        return redirect()->route('login')->with('error', 'Por favor inicia sesión');
+    {
+        if (!session('token')) {
+            return redirect()->route('login')->with('error', 'Por favor inicia sesión');
+        }
+
+        $response = $this->apiService->get('/veterinaries');
+
+        if (isset($response['success']) && !$response['success']) {
+            return redirect()->route('dashboard')
+                ->with('error', $response['error'] ?? 'Error al cargar las veterinarias');
+        }
+
+        // Maneja distintas estructuras posibles
+        if (isset($response['data'])) {
+            $veterinarias = $response['data'];
+        } elseif (isset($response['data']['data'])) {
+            $veterinarias = $response['data']['data'];
+        } else {
+            $veterinarias = $response;
+        }
+
+        // 🔥 NUEVO: Obtener citas para el botón
+        $appointmentsResponse = $this->apiService->get('/appointments');
+        $appointments = isset($appointmentsResponse['success']) && !$appointmentsResponse['success'] ? [] : $appointmentsResponse;
+
+        return view('veterinarias.index', compact('veterinarias', 'appointments'));
     }
-
-    $response = $this->apiService->get('/veterinaries');
-
-    if (isset($response['success']) && !$response['success']) {
-        return redirect()->route('dashboard')
-            ->with('error', $response['error'] ?? 'Error al cargar las veterinarias');
-    }
-
-    // Maneja distintas estructuras posibles
-    if (isset($response['data'])) {
-        $veterinarias = $response['data'];
-    } elseif (isset($response['data']['data'])) {
-        $veterinarias = $response['data']['data'];
-    } else {
-        $veterinarias = $response;
-    }
-
-    return view('veterinarias.index', compact('veterinarias'));
-}
+    
     public function show($id)
     {
         // Verificar si el usuario está autenticado

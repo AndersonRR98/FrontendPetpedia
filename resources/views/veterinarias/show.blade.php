@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app')  <!-- vista de interfaz de veterinarias de detalles -->
 
 @section('title', $veterinaria['clinic_name'] ?? 'Veterinaria - PetPedia')
 

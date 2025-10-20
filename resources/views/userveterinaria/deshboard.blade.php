@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html>  <!-- vista de interfaz para  las veterinarias -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">

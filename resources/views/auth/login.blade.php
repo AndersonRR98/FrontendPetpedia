@@ -1,4 +1,4 @@
-@extends('layouts.tailwind')
+@extends('layouts.tailwind')  <!-- vista de inicio de sesion-->
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">

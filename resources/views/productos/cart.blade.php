@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app')   <!-- vista del carrito de compras -->
 
 @section('title', 'Carrito - PetPedia')
 

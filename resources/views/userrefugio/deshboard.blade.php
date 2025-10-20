@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html>  <!-- vista de interfaz para el refugio-->
 <html lang="es">
 <head>
     <meta charset="UTF-8">

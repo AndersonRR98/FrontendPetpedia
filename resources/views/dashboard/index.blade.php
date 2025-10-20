@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app')  <!-- vista del deshboard principal del usuario cliente -->
 
 @section('title', 'Dashboard - PetPedia')
 

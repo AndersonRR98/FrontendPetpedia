@@ -1,4 +1,4 @@
-@extends('layouts.tailwind')
+@extends('layouts.tailwind') <!-- vista de la pagina inicial -->
 
 @section('content')
 <!-- Navbar FINAL Mejorado -->

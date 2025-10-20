@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\ApiService;
 
-class AdoptionController extends Controller
+class AdoptionController extends Controller 
 {
     protected $apiService;
 
