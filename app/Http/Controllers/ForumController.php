@@ -14,23 +14,27 @@ class ForumController extends Controller
         $this->apiService = $apiService;
     }
 
-    public function index()
-    {
-        if (!session('token')) {
-            return redirect()->route('login')->with('error', 'Por favor inicia sesión');
-        }
-
-        $response = $this->apiService->get('/forums');
-
-        if (isset($response['success']) && !$response['success']) {
-            return redirect()->route('dashboard')
-                ->with('error', $response['message'] ?? 'Error al cargar los posts del foro');
-        }
-
-        $foros = $response['data'] ?? [];
-
-        return view('foros.index', compact('foros'));
+public function index()
+{
+    if (!session('token')) {
+        return redirect()->route('login')->with('error', 'Por favor inicia sesión');
     }
+
+    // Obtener posts del foro
+    $response = $this->apiService->get('/forums');
+    
+    if (isset($response['success']) && !$response['success']) {
+        return redirect()->route('dashboard')
+            ->with('error', $response['message'] ?? 'Error al cargar los posts del foro');
+    }
+
+    $foros = $response['data'] ?? [];
+
+    // 🔥 USAR EL USUARIO QUE YA ESTÁ EN SESIÓN (del middleware)
+    $currentUser = session('user');
+
+    return view('foros.index', compact('foros', 'currentUser'));
+}
 
     public function store(Request $request)
     {
@@ -113,17 +117,36 @@ class ForumController extends Controller
     }
 
     public function destroy($id)
-    {
-        if (!session('token')) {
-            return redirect()->route('login')->with('error', 'Por favor inicia sesión');
-        }
+{
+    \Log::info("=== INICIANDO ELIMINACIÓN ===");
+    \Log::info("Post ID: {$id}");
+    \Log::info("Usuario ID: " . auth()->id());
+    \Log::info("Token existe: " . (session('token') ? 'Sí' : 'No'));
 
+    if (!session('token')) {
+        \Log::warning("No hay token de sesión");
+        return redirect()->route('login')->with('error', 'Por favor inicia sesión');
+    }
+
+    try {
+        \Log::info("Llamando a ApiService->delete con endpoint: /forums/{$id}");
+        
         $response = $this->apiService->delete("/forums/{$id}");
+        
+        \Log::info("Respuesta completa de ApiService:", $response);
 
         if (!isset($response['success']) || !$response['success']) {
-            return back()->with('error', $response['message'] ?? 'Error al eliminar el post');
+            $errorMessage = $response['message'] ?? $response['error'] ?? 'Error desconocido al eliminar el post';
+            \Log::error('Error en la respuesta de la API: ' . $errorMessage);
+            return back()->with('error', $errorMessage);
         }
 
+        \Log::info('Post eliminado exitosamente');
         return redirect()->route('foros.index')->with('success', 'Post eliminado exitosamente');
+
+    } catch (\Exception $e) {
+        \Log::error('Excepción en destroy: ' . $e->getMessage());
+        return back()->with('error', 'Error de conexión: ' . $e->getMessage());
     }
+}
 }

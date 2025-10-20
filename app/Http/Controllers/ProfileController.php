@@ -16,9 +16,7 @@ class ProfileController extends Controller
         $this->apiService = $apiService;
     }
 
-    /**
-     * Muestra la vista de perfil con los datos del usuario.
-     */
+
     public function show()
     {
         $user = session('user');

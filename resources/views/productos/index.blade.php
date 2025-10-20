@@ -20,13 +20,13 @@
 
         <!-- Botones de acción mejorados -->
         <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-12">
-            <a href="{{ route('products.cart') }}" 
-               class="bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-8 py-4 rounded-2xl hover:from-blue-600 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105 shadow-xl font-bold flex items-center">
-                <i class="fas fa-shopping-cart mr-3 text-xl"></i>
-                Ver Carrito
-                <span class="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold ml-3" id="cart-count">
-                    {{ count(session('cart', [])) }}
-                </span>
+         <a href="{{ route('products.cart') }}" 
+           class="bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-8 py-4 rounded-2xl hover:from-blue-600 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105 shadow-xl font-bold flex items-center">
+            <i class="fas fa-shopping-cart mr-3 text-xl"></i>
+            Ver Carrito
+           <span class="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold ml-3" id="cart-count">
+             {{ session('cart_count', count(session('cart', []))) }}
+             </span>
             </a>
             
             <a href="{{ route('products.myOrders') }}" 
@@ -277,7 +277,124 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// ... (el resto del JavaScript se mantiene igual)
+function setupFilters() {
+    const searchInput = document.getElementById('search-input');
+    const filterSort = document.getElementById('filter-sort');
+    const clearFilters = document.getElementById('clear-filters');
+    const productosContainer = document.getElementById('productos-container');
+    const noResults = document.getElementById('no-results');
+    const productosCount = document.getElementById('productos-count');
+
+    // Función para filtrar y ordenar productos
+    function filterAndSortProducts() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const sortValue = filterSort.value;
+        
+        let filteredProductos = allProductos.filter(producto => {
+            const name = producto.dataset.name || '';
+            const description = producto.dataset.description || '';
+            const veterinary = producto.dataset.veterinary || '';
+            
+            // Si no hay término de búsqueda, mostrar todos
+            if (!searchTerm) return true;
+            
+            // Buscar en nombre, descripción y veterinaria
+            return name.includes(searchTerm) || 
+                   description.includes(searchTerm) || 
+                   veterinary.includes(searchTerm);
+        });
+
+        // Ordenar productos
+        if (sortValue) {
+            filteredProductos.sort((a, b) => {
+                const priceA = parseFloat(a.dataset.price) || 0;
+                const priceB = parseFloat(b.dataset.price) || 0;
+                const nameA = (a.dataset.name || '').toLowerCase();
+                const nameB = (b.dataset.name || '').toLowerCase();
+                
+                switch(sortValue) {
+                    case 'price_asc':
+                        return priceA - priceB;
+                    case 'price_desc':
+                        return priceB - priceA;
+                    case 'name_asc':
+                        return nameA.localeCompare(nameB);
+                    case 'name_desc':
+                        return nameB.localeCompare(nameA);
+                    default:
+                        return 0;
+                }
+            });
+        }
+
+        // Actualizar contador
+        productosCount.textContent = filteredProductos.length;
+        
+        // Mostrar/ocultar mensaje de no resultados
+        if (filteredProductos.length === 0) {
+            productosContainer.classList.add('hidden');
+            noResults.classList.remove('hidden');
+        } else {
+            productosContainer.classList.remove('hidden');
+            noResults.classList.add('hidden');
+            
+            // Reorganizar productos en el contenedor
+            productosContainer.innerHTML = '';
+            filteredProductos.forEach(producto => {
+                productosContainer.appendChild(producto);
+            });
+            
+            // Aplicar animaciones a los productos filtrados
+            const newCards = productosContainer.querySelectorAll('.producto-card');
+            newCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', debounce(filterAndSortProducts, 300));
+    filterSort.addEventListener('change', filterAndSortProducts);
+    
+    clearFilters.addEventListener('click', function() {
+        searchInput.value = '';
+        filterSort.selectedIndex = 0;
+        filterAndSortProducts();
+        
+        // Efecto visual al limpiar
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            this.style.transform = 'scale(1)';
+        }, 150);
+    });
+
+    // Función debounce para mejorar rendimiento
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Filtrar con Enter en el buscador
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            filterAndSortProducts();
+        }
+    });
+}
 </script>
 @endpush
 @endsection

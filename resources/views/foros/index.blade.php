@@ -5,6 +5,8 @@
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-12">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+
         <!-- Header Mejorado -->
         <div class="mb-12 text-center">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-orange-500 to-amber-600 rounded-3xl shadow-2xl mb-6">
@@ -126,25 +128,26 @@
             @else
                 @php
                     $localImages = ['foro1.jpg','foro2.jpg','foro3.jpg','foro4.jpg'];
+                    // 🔥 USAR EL USUARIO DE LA SESIÓN (del middleware)
+                    $currentUser = session('user');
+                    $currentUserId = $currentUser['id'] ?? null;
+                    $currentUserName = $currentUser['name'] ?? 'Usuario';
                 @endphp
 
                 @foreach($foros as $post)
                     @php
-                        // Lógica mejorada para determinar qué imagen mostrar
+                        // Lógica para imagen
                         $imageUrl = null;
-                        
-                        // Si el post tiene imagen (posts nuevos con imagen)
                         if (!empty($post['image']) && $post['image'] !== null && strlen($post['image']) > 100) {
-                            // Post con imagen en base64
                             $imageUrl = 'data:image/jpeg;base64,' . $post['image'];
                         } else {
-                            // Post sin imagen - usar imagen estática basada en el ID del post
                             $postId = $post['id'] ?? 1;
-                            
-                            // Si el ID es mayor que la cantidad de imágenes, usamos módulo
                             $imageIndex = ($postId - 1) % count($localImages);
                             $imageUrl = asset('images/foros/' . $localImages[$imageIndex]);
                         }
+
+                        // 🔥 VERIFICACIÓN CON USUARIO DE SESIÓN
+                        $isOwner = $currentUserId && isset($post['user']['id']) && $currentUserId == $post['user']['id'];
                     @endphp
 
                     <div class="foro-card group relative bg-gradient-to-br from-white via-orange-50 to-amber-100 rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 border border-white/50"
@@ -169,6 +172,13 @@
                                     <span class="text-gray-800 font-bold text-sm">{{ $post['user']['name'] ?? 'Anónimo' }}</span>
                                 </div>
                             </div>
+
+                            <!-- Badge "Tú" si es el autor -->
+                            @if($isOwner)
+                            <div class="absolute top-5 right-5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl px-3 py-1 shadow-lg">
+                                <span class="text-sm font-bold">Tú</span>
+                            </div>
+                            @endif
                         </div>
 
                         <!-- Contenido del post -->
@@ -188,7 +198,7 @@
                             </p>
 
                             <!-- Estadísticas y acciones -->
-                            <div class="flex justify-between items-center pt-5 border-t border-gray-200/60">
+                            <div class="flex flex-wrap gap-3 justify-between items-center pt-5 border-t border-gray-200/60">
                                 <!-- Like -->
                                 <form method="POST" action="{{ route('foros.like', $post['id']) }}" class="flex items-center">
                                     @csrf
@@ -207,6 +217,21 @@
                                     <span class="font-bold">{{ $post['comments_count'] ?? 0 }}</span>
                                     <span class="hidden sm:inline">Comentarios</span>
                                 </button>
+
+                                <!-- Botón Eliminar - Solo para el autor -->
+                                @if($isOwner)
+                                <form method="POST" action="{{ route('foros.destroy', $post['id']) }}" 
+                                      class="delete-form flex items-center" 
+                                      data-post-title="{{ $post['title'] }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            class="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl transition-all duration-300 transform hover:scale-105 group/delete">
+                                        <i class="fas fa-trash group-hover/delete:scale-110 transition-transform duration-300"></i>
+                                        <span class="hidden sm:inline">Eliminar</span>
+                                    </button>
+                                </form>
+                                @endif
 
                                 <!-- Fecha -->
                                 @if($post['created_at'] ?? false)
@@ -283,8 +308,22 @@ function toggleComments(postId) {
     }
 }
 
-// Efectos de entrada para las tarjetas
+// Confirmación para eliminar posts
 document.addEventListener('DOMContentLoaded', function() {
+    const deleteForms = document.querySelectorAll('.delete-form');
+    
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const postTitle = this.getAttribute('data-post-title');
+            
+            if (confirm(`¿Estás seguro de que quieres eliminar la publicación "${postTitle}"? Esta acción no se puede deshacer.`)) {
+                this.submit();
+            }
+        });
+    });
+
+    // Efectos de entrada para las tarjetas
     const cards = document.querySelectorAll('.foro-card');
     cards.forEach((card, index) => {
         card.style.opacity = '0';

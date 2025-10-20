@@ -3,6 +3,23 @@
 @section('title', $veterinaria['clinic_name'] ?? 'Veterinaria - PetPedia')
 
 @section('content')
+@php
+    // CORRECCIÓN: Función para formatear horarios consistentemente
+    function formatearHorarioParaDetalle($horario) {
+        if (is_string($horario)) {
+            return $horario;
+        }
+        
+        if (is_array($horario)) {
+            if (count($horario) >= 2 && !empty($horario[0]) && !empty($horario[1])) {
+                return $horario[0] . ' - ' . $horario[1];
+            }
+        }
+        
+        return 'Cerrado';
+    }
+@endphp
+
 <div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Breadcrumb mejorado -->
@@ -67,7 +84,7 @@
                             @php
                                 // CORREGIDO: Usar el mismo algoritmo que en index
                                 $localImages = ['veterinaria1.jpg','veterinaria2.jpg','veterinaria3.jpg','veterinaria4.jpg','veterinaria5.jpg','veterinaria6.jpg'];
-                                $imageIndex = $veterinaria['id'] % count($localImages); // Usar ID para consistencia
+                                $imageIndex = $veterinaria['id'] % count($localImages);
                                 $localImage = $localImages[$imageIndex];
                             @endphp
                             <div class="relative inline-block">
@@ -146,11 +163,15 @@
                                     ];
                                 @endphp
                                 @foreach($days as $key => $day)
+                                @php
+                                    $horarioDia = $schedules[$key] ?? 'Cerrado';
+                                    $horarioFormateado = formatearHorarioParaDetalle($horarioDia);
+                                @endphp
                                 <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-gray-700">
                                     <p class="font-bold text-gray-900 mb-2 text-center">{{ $day }}</p>
                                     <p class="text-center text-sm font-semibold">
-                                        @if(isset($schedules[$key]) && $schedules[$key] !== 'Cerrado' && $schedules[$key] !== '')
-                                            <span class="text-green-600 bg-green-50 px-3 py-1 rounded-full">{{ $schedules[$key] }}</span>
+                                        @if($horarioFormateado !== 'Cerrado')
+                                            <span class="text-green-600 bg-green-50 px-3 py-1 rounded-full">{{ $horarioFormateado }}</span>
                                         @else
                                             <span class="text-red-500 bg-red-50 px-3 py-1 rounded-full font-bold">Cerrado</span>
                                         @endif

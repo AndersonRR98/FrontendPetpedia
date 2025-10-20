@@ -3,6 +3,59 @@
 @section('title', 'Veterinarias - PetPedia')
 
 @section('content')
+@php
+    // CORRECCIÓN: Función mejorada para verificar si está abierto AHORA MISMO
+    function estaAbiertaAhora($horario) {
+        if (!$horario || $horario === '' || strtolower($horario) === 'cerrado') {
+            return false;
+        }
+        
+        $horarioLower = strtolower($horario);
+        
+        // Si es "24h" o "urgencias 24h", siempre está abierto
+        if (str_contains($horarioLower, '24h') || str_contains($horarioLower, 'urgencias')) {
+            return true;
+        }
+        
+        // Si tiene formato de horario (ej: "7:00-19:00"), verificar hora actual
+        if (preg_match('/(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})/', $horario, $matches)) {
+            $horaApertura = (int)$matches[1];
+            $minutoApertura = (int)$matches[2];
+            $horaCierre = (int)$matches[3];
+            $minutoCierre = (int)$matches[4];
+            
+            $horaActual = (int)date('H');
+            $minutoActual = (int)date('i');
+            
+            // Convertir todo a minutos para facilitar comparación
+            $minutosActual = $horaActual * 60 + $minutoActual;
+            $minutosApertura = $horaApertura * 60 + $minutoApertura;
+            $minutosCierre = $horaCierre * 60 + $minutoCierre;
+            
+            // Verificar si la hora actual está dentro del horario
+            return $minutosActual >= $minutosApertura && $minutosActual <= $minutosCierre;
+        }
+        
+        // Si no coincide con ningún patrón conocido, asumir que está abierto
+        return true;
+    }
+
+    // Función para formatear el horario para mostrar
+    function formatearHorarioParaIndex($horario) {
+        if (is_string($horario)) {
+            return $horario;
+        }
+        
+        if (is_array($horario)) {
+            if (count($horario) >= 2 && !empty($horario[0]) && !empty($horario[1])) {
+                return $horario[0] . ' - ' . $horario[1];
+            }
+        }
+        
+        return 'Cerrado';
+    }
+@endphp
+
 <div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header Mejorado -->
@@ -16,6 +69,11 @@
             <p class="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
                 Encuentra la mejor atención médica para tu compañero de cuatro patas
             </p>
+            <!-- Mostrar hora actual -->
+            <div class="mt-4 inline-flex items-center bg-white/80 backdrop-blur-lg rounded-2xl px-4 py-2 shadow-lg border border-white/60">
+                <i class="fas fa-clock text-purple-500 mr-2"></i>
+                <span class="text-gray-700 font-semibold">Hora actual: {{ date('H:i') }}</span>
+            </div>
         </div>
 
         <!-- Buscador y Filtros Mejorados -->
@@ -62,8 +120,18 @@
             @php
                 // CORREGIDO: Usar el ID de la veterinaria para consistencia entre vistas
                 $localImages = ['veterinaria1.jpg','veterinaria2.jpg','veterinaria3.jpg','veterinaria4.jpg','veterinaria5.jpg','veterinaria6.jpg'];
-                $imageIndex = $veterinaria['id'] % count($localImages); // Usar ID en lugar de índice
+                $imageIndex = $veterinaria['id'] % count($localImages);
                 $localImage = $localImages[$imageIndex];
+                
+                // Procesar horarios para mostrar "Hoy" - CORREGIDO PARA TUS DATOS
+                $schedules = is_string($veterinaria['schedules']) ? json_decode($veterinaria['schedules'], true) : $veterinaria['schedules'];
+                $diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+                $hoy = $diasSemana[date('N') - 1];
+                $horarioHoy = $schedules[$hoy] ?? 'Cerrado';
+                $horarioFormateado = formatearHorarioParaIndex($horarioHoy);
+                
+                // CORRECCIÓN: Determinar si está abierta AHORA MISMO
+                $estaAbiertaAhora = estaAbiertaAhora($horarioFormateado);
             @endphp
             
             <div class="veterinaria-card group relative bg-gradient-to-br from-white via-purple-50 to-indigo-100 rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 border border-white/50"
@@ -90,11 +158,16 @@
                         {{ $veterinaria['specialization'] ?? 'Veterinaria' }}
                     </span>
 
-                    <!-- Rating stars -->
+                    <!-- Estado actual (Abierto/Cerrado) - CORREGIDO -->
                     <div class="absolute top-5 right-5 bg-white/90 backdrop-blur-sm rounded-2xl px-3 py-1 shadow-lg">
                         <div class="flex items-center space-x-1">
-                            <i class="fas fa-star text-yellow-400 text-sm"></i>
-                            <span class="text-gray-800 font-bold text-sm">4.8</span>
+                            @if($estaAbiertaAhora)
+                                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span class="text-green-600 font-bold text-sm">Abierto</span>
+                            @else
+                                <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                                <span class="text-red-600 font-bold text-sm">Cerrado</span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -113,40 +186,22 @@
                             <span class="font-semibold">Lic. {{ $veterinaria['veterinary_license'] ?? 'En trámite' }}</span>
                         </div>
                         
-@if($veterinaria['schedules'])
-<div class="flex items-start">
-    <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-3 mt-0.5">
-        <i class="fas fa-clock text-yellow-500 text-sm"></i>
-    </div>
-    <span class="font-medium">
-        @php
-            // CORRECCIÓN: Usar días en español como en la base de datos
-            $schedules = is_string($veterinaria['schedules']) ? json_decode($veterinaria['schedules'], true) : $veterinaria['schedules'];
-            $diasSemana = [
-                'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'
-            ];
-            $hoy = $diasSemana[date('N') - 1]; // date('N') devuelve 1(lunes) a 7(domingo)
-            $horarioHoy = $schedules[$hoy] ?? 'Cerrado';
-            
-            // CORRECCIÓN: Convertir array a string si es necesario
-            if (is_array($horarioHoy)) {
-                // Si es un array con horario de apertura y cierre
-                if (count($horarioHoy) >= 2) {
-                    $horarioHoy = $horarioHoy[0] . ' - ' . $horarioHoy[1];
-                } else {
-                    $horarioHoy = implode(' - ', $horarioHoy);
-                }
-            }
-        @endphp
-        <span class="text-gray-900">Hoy:</span> 
-        @if($horarioHoy !== 'Cerrado' && $horarioHoy !== '')
-            <span class="text-green-600 font-semibold">{{ $horarioHoy }}</span>
-        @else
-            <span class="text-red-500 font-semibold">Cerrado</span>
-        @endif
-    </span>
-</div>
-@endif
+                        <!-- CORREGIDO: Horario de hoy con verificación de hora actual -->
+                        @if($veterinaria['schedules'])
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-3 mt-0.5">
+                                <i class="fas fa-clock text-yellow-500 text-sm"></i>
+                            </div>
+                            <span class="font-medium">
+                                <span class="text-gray-900">Hoy:</span> 
+                                @if($estaAbiertaAhora)
+                                    <span class="text-green-600 font-semibold">{{ $horarioFormateado }}</span>
+                                @else
+                                    <span class="text-red-500 font-semibold">{{ $horarioFormateado }}</span>
+                                @endif
+                            </span>
+                        </div>
+                        @endif
                         
                         @if(isset($veterinaria['user']['profile']['address']))
                         <div class="flex items-center">

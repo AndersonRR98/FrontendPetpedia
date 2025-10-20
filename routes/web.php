@@ -74,11 +74,18 @@ Route::middleware([CheckApiSession::class])->group(function () {
         Route::post('/carrito/agregar', [ProductController::class, 'addToCart'])->name('products.addToCart');
     });
 
-    Route::get('/carrito', [ProductController::class, 'cart'])->name('products.cart');
-    Route::post('/carrito/guardar', [ProductController::class, 'storeCart'])->name('products.storeCart');
+   Route::prefix('carrito')->group(function () {    
+    Route::get('/', [ProductController::class, 'cart'])->name('products.cart');
+    Route::post('/guardar', [ProductController::class, 'storeCart'])->name('products.storeCart');
+    Route::post('/actualizar', [ProductController::class, 'updateCart'])->name('products.updateCart');
+
+        Route::post('/eliminar/{productId}', [ProductController::class, 'removeFromCart'])->name('products.removeFromCart');
+    Route::post('/vaciar', [ProductController::class, 'clearCart'])->name('products.clearCart');
+});
 
     // Pedidos
     Route::get('/pedidos', [ProductController::class, 'myOrders'])->name('products.myOrders');
+    
 
     // Perfil
     Route::prefix('perfil')->group(function () {
